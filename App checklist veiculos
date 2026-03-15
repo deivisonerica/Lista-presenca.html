@@ -106,9 +106,9 @@
             num: document.getElementById("numCondutor").value,
             kmi: document.getElementById("kmi").value,
             selo: document.getElementById("corSelo").value,
-            valSelo: document.getElementById("validadeSelo").value.split('-').reverse().join('/'),
+            valSelo: document.getElementById("validadeSelo").value ? document.getElementById("validadeSelo").value.split('-').reverse().join('/') : "---",
             oleoKM: document.getElementById("proximaTrocaKM").value,
-            oleoData: document.getElementById("proximaTrocaData").value.split('-').reverse().join('/'),
+            oleoData: document.getElementById("proximaTrocaData").value ? document.getElementById("proximaTrocaData").value.split('-').reverse().join('/') : "",
             horaI: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
             data: document.getElementById('dataAuto').value
         };
