@@ -3,18 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequência Telejur - JBE</title>
+    <title>Frequência Telejur PRO</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .container { max-width: 500px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin: auto; }
-        h2 { color: #075E54; text-align: center; }
-        .row { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="date"], textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .equipe { border-top: 1px solid #eee; padding-top: 10px; }
-        .item-lista { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; }
-        .item-lista input { margin-right: 10px; transform: scale(1.2); }
-        button { width: 100%; background-color: #25D366; color: white; border: none; padding: 12px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; }
+        .container { max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin: auto; }
+        h2 { color: #075E54; text-align: center; margin-bottom: 20px; font-size: 22px; }
+        .card-status { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; text-align: center; }
+        .status-box { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #dee2e6; }
+        .status-box span { display: block; font-size: 18px; font-weight: bold; color: #075E54; }
+        .status-box label { font-size: 11px; text-transform: uppercase; color: #6c757d; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+        .item-info { display: flex; align-items: center; }
+        .item-info input { margin-right: 15px; transform: scale(1.4); }
+        select { font-size: 12px; border-radius: 5px; border: 1px solid #ddd; padding: 2px; color: #666; }
+        .hidden { display: none; }
+        button { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; }
         button:hover { background-color: #128C7E; }
     </style>
 </head>
@@ -22,67 +25,42 @@
 
 <div class="container">
     <h2>📋 Frequência Telejur</h2>
-    
-    <div class="row">
-        <label>Data do Relatório:</label>
-        <input type="date" id="data">
+
+    <div class="card-status">
+        <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
+        <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
+        <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
     </div>
 
-    <div class="equipe">
-        <label>Selecione os presentes na planta:</label>
-        <div id="lista-equipe">
-            <div class="item-lista"><input type="checkbox" class="membro" value="Adriano Ferreira" checked> Adriano Ferreira</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Cezar Prado" checked> Cezar Prado</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Deivison Aleidson" checked> Deivison Aleidson</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Edenildo Rodrigues" checked> Edenildo Rodrigues</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Francivaldo Costa" checked> Francivaldo Costa</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Joelcinei Guimarães" checked> Joelcinei Guimarães</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Jean Soares" checked> Jean Soares</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Lucas Santos" checked> Lucas Santos</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Matheus Costa" checked> Matheus Costa</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Welyton Pereira" checked> Welyton Pereira</div>
-            <div class="item-lista"><input type="checkbox" class="membro" value="Ruan Barros" checked> Ruan Barros</div>
+    <div id="lista-equipe">
         </div>
-    </div>
 
-    <div class="row">
-        <label>Observações (Férias/Atestados/Faltas):</label>
-        <textarea id="obs" rows="3" placeholder="Ex: Fulano (Atestado)"></textarea>
-    </div>
-
-    <button onclick="enviarWhatsapp()">🚀 Enviar para WhatsApp</button>
+    <button onclick="enviarWhatsapp()">🚀 Enviar Relatório</button>
 </div>
 
 <script>
-    // Define a data de hoje automaticamente
-    document.getElementById('data').valueAsDate = new Date();
+    const equipe = ["Adriano Ferreira", "Cezar Prado", "Deivison Aleidson", "Edenildo Rodrigues", "Francivaldo Costa", "Joelcinei Guimarães", "Jean Soares", "Lucas Santos", "Matheus Costa", "Welyton Pereira", "Ruan Barros"];
+    
+    const listaDiv = document.getElementById('lista-equipe');
 
-    function enviarWhatsapp() {
-        const data = new Date(document.getElementById('data').value).toLocaleDateString('pt-BR');
-        const checkboxes = document.querySelectorAll('.membro:checked');
-        const totalEfetivo = checkboxes.length;
-        const observacoes = document.getElementById('obs').value;
-        
-        let listaNomes = "";
-        checkboxes.forEach(cb => {
-            listaNomes += cb.value + "\n";
-        });
+    // Cria a lista dinamicamente
+    equipe.forEach((nome, index) => {
+        listaDiv.innerHTML += `
+            <div class="item-lista">
+                <div class="item-info">
+                    <input type="checkbox" id="check-${index}" class="membro" checked onchange="atualizarStatus()">
+                    <span id="nome-${index}">${nome}</span>
+                </div>
+                <select id="motivo-${index}" class="hidden" onchange="atualizarStatus()">
+                    <option value="Falta">Falta</option>
+                    <option value="Atestado">Atestado</option>
+                    <option value="Férias">Férias</option>
+                </select>
+            </div>
+        `;
+    });
 
-        // Montagem da mensagem baseada no padrão Mirielly
-        const mensagem = `Segue Lista de frequência de hoje. Atentar nas observações.\n\n` +
-            `✅ Empresa: Telejur\n` +
-            `Informações\n\n` +
-            `Data: ${data}\n\n` +
-            `✔️Efetivo na planta: ${totalEfetivo}\n` +
-            `${listaNomes}\n` +
-            `✔️Observações:\n${observacoes || "Nenhuma"}`;
-
-        // URL do WhatsApp (substitua pelo número da Mirielly se quiser fixar)
-        const url = "https://api.whatsapp.com/send?text=" + encodeURIComponent(mensagem);
-        
-        window.open(url, '_blank');
-    }
-</script>
-
-</body>
-</html>
+    function atualizarStatus() {
+        let f = 0, a = 0, faltas = 0;
+        equipe.forEach((_, i) => {
+            const check = document.getElementById(`check
