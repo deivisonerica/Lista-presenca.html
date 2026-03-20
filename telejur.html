@@ -74,6 +74,18 @@
 
     let dadosLoc = { link: "", enderecoFormatado: "", unidadeMsg: "", statusMsg: "", hora: "" };
 
+    // Função Haversine para calcular distância real em metros
+    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+        const R = 6371000; // Raio da Terra em metros
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
         const selInd = document.getElementById('select-individual');
@@ -114,14 +126,19 @@
         if (!navigator.geolocation) return;
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
-            const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+            const lat = pos.coords.latitude; 
+            const lon = pos.coords.longitude;
             const agora = new Date();
             dadosLoc.hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
             
             let plantaIdentificada = null;
             for (const p of pontosAlcoa) {
-                if (Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2)) < 0.009) plantaIdentificada = p.nome;
+                const dist = calcularDistanciaMetros(lat, lon, p.lat, p.lon);
+                if (dist <= 200) { // Limite de 200 metros
+                    plantaIdentificada = p.nome;
+                    break;
+                }
             }
 
             if (plantaIdentificada) {
