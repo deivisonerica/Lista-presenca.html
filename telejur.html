@@ -110,7 +110,8 @@
 
         equipe.forEach((nome, i) => {
             const cb = document.getElementById(`check-${i}`);
-            const nomeFormatado = `*${nome}*`; // Negrito
+            // Nomes em texto normal (sem negrito)
+            const nomeFormatado = nome; 
             
             if (cb.checked) pres.push(nomeFormatado);
             else {
