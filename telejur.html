@@ -36,10 +36,10 @@
     <label class="label-peq">MODO DE ENVIO:</label>
     <select id="modo-envio" onchange="alternarModo()">
         <option value="geral">Lista Geral (Equipe)</option>
-        <option value="individual">Formulário Individual (Validar Local)</option>
+        <option value="individual">Formulário Individual (Validar Unidade)</option>
     </select>
 
-    <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
+    <div id="status-gps" class="btn-gps hidden">⌛ Identificando unidade Alcoa...</div>
 
     <div id="campos-individual" class="hidden">
         <label class="label-peq">FUNCIONÁRIO:</label>
@@ -68,12 +68,13 @@
         "Welyton Pereira", "Ruan Barros", "Rafael Gonçalves"
     ];
 
-    const pontosAlcoa = [
-        { nome: "Alcoa Juruti Porto", lat: -2.155555, lon: -56.095555 },
-        { nome: "Alcoa Juruti Beneficiamento", lat: -2.448888, lon: -56.170888 }
+    // Coordenadas aproximadas das unidades em Juruti
+    const unidadesAlcoa = [
+        { nome: "ALCOA - PORTO", lat: -2.155555, lon: -56.095555 },
+        { nome: "ALCOA - BENEFICIAMENTO", lat: -2.448888, lon: -56.170888 }
     ];
     
-    let dadosLocalizacao = { link: "", endereco: "Detectando...", statusFrequencia: "Ausente" };
+    let dadosLocalizacao = { link: "", endereco: "Detectando...", statusFrequencia: "Ausente", unidadeEspecifica: "Fora da Planta" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -113,10 +114,11 @@
         }
     }
 
-    function identificarPlanta(lat, lon) {
-        for (const ponto of pontosAlcoa) {
-            const dist = Math.sqrt(Math.pow(lat - ponto.lat, 2) + Math.pow(lon - ponto.lon, 2));
-            if (dist < 0.008) return ponto.nome; 
+    function checarUnidade(lat, lon) {
+        for (const unidade of unidadesAlcoa) {
+            // Raio de aproximadamente 1km para cada unidade
+            const dist = Math.sqrt(Math.pow(lat - unidade.lat, 2) + Math.pow(lon - unidade.lon, 2));
+            if (dist < 0.009) return unidade.nome; 
         }
         return null;
     }
@@ -128,37 +130,37 @@
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
-            dadosLocalizacao.link = `http://maps.google.com/maps?q=${lat},${lon}`;
+            dadosLocalizacao.link = `https://www.google.com/maps?q=${lat},${lon}`;
 
-            const plantaDetectada = identificarPlanta(lat, lon);
+            const unidadeAlcoa = checarUnidade(lat, lon);
             
-            if (plantaDetectada) {
-                dadosLocalizacao.endereco = plantaDetectada;
-                dadosLocalizacao.statusFrequencia = "Presente";
-                statusGps.innerText = "✅ STATUS: PRESENTE (" + plantaDetectada + ")";
+            if (unidadeAlcoa) {
+                dadosLocalizacao.unidadeEspecifica = unidadeAlcoa;
+                dadosLocalizacao.endereco = unidadeAlcoa;
+                dadosLocalizacao.statusFrequencia = "Presente na Unidade";
+                statusGps.innerText = "✅ " + unidadeAlcoa;
                 statusGps.style.backgroundColor = "#075E54";
             } else {
-                // Busca endereço amigável se estiver fora da planta
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                     const data = await res.json();
                     const rua = data.address.road || "Rua não identificada";
-                    const bairro = data.address.suburb || data.address.neighbourhood || "";
                     const cidade = data.address.city || data.address.town || "Juruti";
                     
-                    dadosLocalizacao.endereco = `${rua}${bairro ? ', ' + bairro : ''} - ${cidade}`;
-                    dadosLocalizacao.statusFrequencia = "Ausente (Fora da Planta)";
-                    statusGps.innerText = "🛑 STATUS: AUSENTE (" + cidade + ")";
+                    dadosLocalizacao.unidadeEspecifica = "Fora da Planta";
+                    dadosLocalizacao.endereco = `${rua} - ${cidade}`;
+                    dadosLocalizacao.statusFrequencia = "Ausente (Local Externo)";
+                    statusGps.innerText = "🛑 FORA DA PLANTA (" + cidade + ")";
                     statusGps.style.backgroundColor = "#d9534f";
                 } catch (e) {
-                    dadosLocalizacao.endereco = "Fora da Planta (Local Externo)";
+                    dadosLocalizacao.unidadeEspecifica = "Fora da Planta";
                     dadosLocalizacao.statusFrequencia = "Ausente";
-                    statusGps.innerText = "🛑 STATUS: AUSENTE";
+                    statusGps.innerText = "🛑 FORA DA PLANTA";
                     statusGps.style.backgroundColor = "#d9534f";
                 }
             }
         }, () => {
-            statusGps.innerText = "⚠️ GPS não obtido. Envie manualmente.";
+            statusGps.innerText = "⚠️ GPS não obtido.";
             statusGps.style.backgroundColor = "#856404";
         });
     }
@@ -192,7 +194,7 @@
         const dataHoje = new Date().toLocaleDateString('pt-BR');
         
         let locInfo = modo === "individual" 
-            ? `📍 *Local:* ${dadosLocalizacao.endereco}\n📊 *Status:* ${dadosLocalizacao.statusFrequencia}\n🔗 *Link:* ${dadosLocalizacao.link}\n`
+            ? `🏢 *Unidade:* ${dadosLocalizacao.unidadeEspecifica}\n📍 *Localização:* ${dadosLocalizacao.endereco}\n📊 *Status:* ${dadosLocalizacao.statusFrequencia}\n🔗 *Link GPS:* ${dadosLocalizacao.link}\n`
             : "";
 
         let msg = "";
@@ -200,7 +202,7 @@
         if (modo === "individual") {
             const nome = document.getElementById('select-individual').value;
             msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n` +
-                  `🏢 *Empresa: Telejur*\n` +
+                  `💼 *Empresa: Telejur*\n` +
                   `📅 Data: ${dataHoje}\n` +
                   `👤 Funcionário: _${nome}_\n\n` +
                   locInfo;
@@ -213,7 +215,7 @@
             msg = `*LISTA DE FREQUÊNCIA TELEJUR*\n\n` +
                   `📅 Data: ${dataHoje}\n\n` +
                   `✔️ *Efetivo na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
-                  `Relatório Geral da Equipe enviado.`;
+                  `Relatório Geral enviado com sucesso.`;
         }
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
