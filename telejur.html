@@ -22,7 +22,7 @@
         select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
         .hidden { display: none; }
 
-        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; }
+        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; transition: 0.3s; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
         button.enviar:hover { background-color: #128C7E; }
         .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
@@ -39,7 +39,7 @@
         <option value="individual">Formulário Individual (Validar Local)</option>
     </select>
 
-    <div id="status-gps" class="btn-gps hidden">⌛ Aguardando Localização...</div>
+    <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
 
     <div id="campos-individual" class="hidden">
         <label class="label-peq">FUNCIONÁRIO:</label>
@@ -73,7 +73,7 @@
         { nome: "Alcoa Juruti Beneficiamento", lat: -2.448888, lon: -56.170888 }
     ];
     
-    let dadosLocalizacao = { link: "", endereco: "Local não identificado", statusFrequencia: "Ausente" };
+    let dadosLocalizacao = { link: "", endereco: "Detectando...", statusFrequencia: "Ausente" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -102,7 +102,6 @@
     function alternarModo() {
         const modo = document.getElementById('modo-envio').value;
         const gpsDiv = document.getElementById('status-gps');
-
         document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
         document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
 
@@ -111,7 +110,6 @@
             obterLocalizacaoAuto();
         } else {
             gpsDiv.classList.add('hidden');
-            dadosLocalizacao.statusFrequencia = "Equipe Geral";
         }
     }
 
@@ -123,11 +121,11 @@
         return null;
     }
 
-    function obterLocalizacaoAuto() {
+    async function obterLocalizacaoAuto() {
         const statusGps = document.getElementById('status-gps');
         if (!navigator.geolocation) return;
 
-        navigator.geolocation.getCurrentPosition((pos) => {
+        navigator.geolocation.getCurrentPosition(async (pos) => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
             dadosLocalizacao.link = `http://maps.google.com/maps?q=${lat},${lon}`;
@@ -140,10 +138,24 @@
                 statusGps.innerText = "✅ STATUS: PRESENTE (" + plantaDetectada + ")";
                 statusGps.style.backgroundColor = "#075E54";
             } else {
-                dadosLocalizacao.endereco = "Fora da Planta";
-                dadosLocalizacao.statusFrequencia = "Ausente";
-                statusGps.innerText = "🛑 STATUS: AUSENTE (Fora da Planta)";
-                statusGps.style.backgroundColor = "#d9534f";
+                // Busca endereço amigável se estiver fora da planta
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    const data = await res.json();
+                    const rua = data.address.road || "Rua não identificada";
+                    const bairro = data.address.suburb || data.address.neighbourhood || "";
+                    const cidade = data.address.city || data.address.town || "Juruti";
+                    
+                    dadosLocalizacao.endereco = `${rua}${bairro ? ', ' + bairro : ''} - ${cidade}`;
+                    dadosLocalizacao.statusFrequencia = "Ausente (Fora da Planta)";
+                    statusGps.innerText = "🛑 STATUS: AUSENTE (" + cidade + ")";
+                    statusGps.style.backgroundColor = "#d9534f";
+                } catch (e) {
+                    dadosLocalizacao.endereco = "Fora da Planta (Local Externo)";
+                    dadosLocalizacao.statusFrequencia = "Ausente";
+                    statusGps.innerText = "🛑 STATUS: AUSENTE";
+                    statusGps.style.backgroundColor = "#d9534f";
+                }
             }
         }, () => {
             statusGps.innerText = "⚠️ GPS não obtido. Envie manualmente.";
@@ -193,26 +205,15 @@
                   `👤 Funcionário: _${nome}_\n\n` +
                   locInfo;
         } else {
-            let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
+            let pres = [];
             equipe.forEach((nome, i) => {
-                const cb = document.getElementById(`check-${i}`);
-                const nomeF = `_${nome}_`;
-                if (cb.checked) pres.push(nomeF);
-                else {
-                    const mot = document.getElementById(`motivo-${i}`).value;
-                    if (mot === "Férias") fer.push(nomeF);
-                    else if (mot === "atestado") ate.push(nomeF);
-                    else if (mot === "Em Viagem") via.push(nomeF);
-                    else if (mot === "Falta Justificada") jus.push(nomeF);
-                    else fal.push(nomeF);
-                }
+                if (document.getElementById(`check-${i}`).checked) pres.push(`_${nome}_`);
             });
 
             msg = `*LISTA DE FREQUÊNCIA TELEJUR*\n\n` +
                   `📅 Data: ${dataHoje}\n\n` +
                   `✔️ *Efetivo na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
-                  `🌴 Férias: ${fer.length} | 🏥 Atestados: ${ate.length}\n` +
-                  `✈️ Viagem: ${via.length} | ❌ Faltas: ${fal.length}`;
+                  `Relatório Geral da Equipe enviado.`;
         }
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
