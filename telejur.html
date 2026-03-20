@@ -22,7 +22,7 @@
         select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
         .hidden { display: none; }
 
-        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; }
+        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; transition: 0.3s; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
         .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
     </style>
@@ -35,10 +35,10 @@
     <label class="label-peq">MODO DE ENVIO:</label>
     <select id="modo-envio" onchange="alternarModo()">
         <option value="geral">Lista Geral (Equipe)</option>
-        <option value="individual">Formulário Individual</option>
+        <option value="individual">Formulário Individual (Validar Local)</option>
     </select>
 
-    <div id="status-gps" class="btn-gps hidden">⌛ Validando Unidade...</div>
+    <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
 
     <div id="campos-individual" class="hidden">
         <label class="label-peq">FUNCIONÁRIO:</label>
@@ -71,7 +71,7 @@
         { nome: "ALCOA - BENEFICIAMENTO", lat: -2.4488, lon: -56.1708 }
     ];
 
-    let dadosLoc = { link: "", endereco: "Não identificado", status: "Ausente", unidade: "Fora da Planta" };
+    let dadosLoc = { link: "", enderecoCompleto: "Não identificado", statusAmigavel: "Ausente", unidadeAlcoa: "Fora da Planta" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -108,22 +108,44 @@
         }
     }
 
-    function obterGps() {
-        navigator.geolocation.getCurrentPosition((pos) => {
+    async function obterGps() {
+        const statusGps = document.getElementById('status-gps');
+        if (!navigator.geolocation) return;
+
+        navigator.geolocation.getCurrentPosition(async (pos) => {
             const lat = pos.coords.latitude; const lon = pos.coords.longitude;
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            
             let unidadeEncontrada = null;
             for (const p of pontosAlcoa) {
                 if (Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2)) < 0.009) unidadeEncontrada = p.nome;
             }
+
             if (unidadeEncontrada) {
-                dadosLoc.unidade = unidadeEncontrada; dadosLoc.status = "Presente na planta";
-                document.getElementById('status-gps').innerText = "✅ " + unidadeEncontrada;
-                document.getElementById('status-gps').style.backgroundColor = "#075E54";
+                dadosLoc.unidadeAlcoa = unidadeEncontrada;
+                dadosLoc.enderecoCompleto = unidadeEncontrada;
+                dadosLoc.statusAmigavel = "Presente na Planta";
+                statusGps.innerText = "✅ " + unidadeEncontrada;
+                statusGps.style.backgroundColor = "#075E54";
             } else {
-                dadosLoc.unidade = "Fora da Planta"; dadosLoc.status = "Ausente";
-                document.getElementById('status-gps').innerText = "🛑 Fora da Planta";
-                document.getElementById('status-gps').style.backgroundColor = "#d9534f";
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                    const data = await res.json();
+                    const rua = data.address.road || "Rua não identificada";
+                    const bairro = data.address.suburb || data.address.neighbourhood || "";
+                    const cidade = data.address.city || data.address.town || "Juruti";
+                    
+                    dadosLoc.unidadeAlcoa = "Fora da Planta";
+                    dadosLoc.enderecoCompleto = `${rua}${bairro ? ', ' + bairro : ''} - ${cidade}`;
+                    dadosLoc.statusAmigavel = "Ausente (Local Externo)";
+                    statusGps.innerText = "🛑 " + (bairro || cidade);
+                    statusGps.style.backgroundColor = "#d9534f";
+                } catch (e) {
+                    dadosLoc.unidadeAlcoa = "Fora da Planta";
+                    dadosLoc.enderecoCompleto = "Local Externo";
+                    statusGps.innerText = "🛑 Local Externo";
+                    statusGps.style.backgroundColor = "#d9534f";
+                }
             }
         });
     }
@@ -154,7 +176,7 @@
 
         if (modo === "individual") {
             const nome = document.getElementById('select-individual').value;
-            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\nData: ${data}\nFuncionário: _${nome}_\nStatus: ✔️ ${dadosLoc.status}\n\n📍 *Unidade:* ${dadosLoc.unidade}\n🔗 *Link:* ${dadosLoc.link}`;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\nData: ${data}\n👤 Funcionário: _${nome}_\n\n🏢 *Unidade:* ${dadosLoc.unidadeAlcoa}\n📍 *Local:* ${dadosLoc.enderecoCompleto}\n📊 *Status:* ${dadosLoc.statusAmigavel}\n🔗 *Link GPS:* ${dadosLoc.link}`;
         } else {
             let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
             equipe.forEach((nome, i) => {
