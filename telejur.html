@@ -41,7 +41,7 @@
 
     <div id="corpo-lista"></div>
 
-    <button onclick="enviarWhatsapp()">🚀 Enviar Relatório</button>
+    <button onclick="enviarWhatsapp()">🚀 Enviar para Mirielly</button>
 </div>
 
 <script>
@@ -105,13 +105,10 @@
     function enviarWhatsapp() {
         const dataHoje = new Date().toLocaleDateString('pt-BR');
         let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
-        const divisor = "----------------------------";
-        const tracejada = "----------------------------";
 
         equipe.forEach((nome, i) => {
             const cb = document.getElementById(`check-${i}`);
-            // Nomes em texto normal (sem negrito)
-            const nomeFormatado = nome; 
+            const nomeFormatado = `_${nome}_`; // Adiciona sublinhado (itálico no WhatsApp)
             
             if (cb.checked) pres.push(nomeFormatado);
             else {
@@ -124,22 +121,15 @@
             }
         });
 
-        let msg = `LISTA DE FREQUÊNCIA - TELEJUR\n` +
-            `==========================\n\n` +
-            `STATUS: ✅ FINALIZADO\n\n` +
-            `DATA: ${dataHoje}\n` +
-            `${divisor}\n\n` +
-            `*EFETIVO NA PLANTA:* ${pres.length}\n` +
-            `${tracejada}\n` +
-            `${pres.join('\n' + tracejada + '\n')}\n` +
-            `${divisor}\n\n` +
-            `🌴 FÉRIAS (${fer.length})${fer.length ? ':\n' + fer.join('\n') : ''}\n\n` +
-            `🏥 ATESTADO (${ate.length})${ate.length ? ':\n' + ate.join('\n') : ''}\n\n` +
-            `✈️ EM VIAGEM (${via.length})${via.length ? ':\n' + via.join('\n') : ''}\n\n` +
-            `✅ FALTA JUSTIFICADA (${jus.length})${jus.length ? ':\n' + jus.join('\n') : ''}\n\n` +
-            `❌ FALTA SEM JUSTIF. (${fal.length})${fal.length ? ':\n' + fal.join('\n') : ''}\n\n` +
-            `${divisor}\n\n` +
-            `OBS: Nenhuma`;
+        let msg = `Segue Lista de frequência de hoje. Atentar nas observações.\n\n` +
+            `✅ *Empresa: Telejur*\n` +
+            `Data: ${dataHoje}\n\n` +
+            `✔️Efetivo na planta: ${pres.length}\n${pres.join('\n')}\n\n` +
+            `✔️Férias (${fer.length})${fer.length ? ': ' + fer.join(', ') : ''}\n\n` +
+            `✔️atestado (${ate.length})${ate.length ? ': ' + ate.join(', ') : ''}\n\n` +
+            `✔️Em viagem (${via.length})${via.length ? ': ' + via.join(', ') : ''}\n\n` +
+            `✔️Falta justificada (${jus.length})${jus.length ? ': ' + jus.join(', ') : ''}\n\n` +
+            `✔️Falta sem justificativa (${fal.length})${fal.length ? ': ' + fal.join(', ') : ''}`;
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
