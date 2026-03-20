@@ -19,11 +19,13 @@
         .item-info input { transform: scale(1.3); cursor: pointer; }
         .nome-func { font-size: 14px; color: #333; }
         
-        select { font-size: 11px; border-radius: 5px; border: 1px solid #ccc; padding: 4px; color: #d9534f; background: #fff; font-weight: bold; }
-        .hidden { visibility: hidden; width: 0; position: absolute; }
+        select, .input-gps { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
+        .hidden { display: none; }
 
+        .btn-gps { background-color: #34b7f1; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 15px; width: 100%; }
         button { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
         button:hover { background-color: #128C7E; }
+        .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -31,15 +33,29 @@
 <div class="container">
     <h2>📋 Frequência Telejur</h2>
 
-    <div class="card-status">
-        <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
-        <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
-        <div class="status-box"><span id="count-viagem">0</span><label>Viagem</label></div>
-        <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
-        <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
+    <label class="label-peq">MODO DE ENVIO:</label>
+    <select id="modo-envio" onchange="alternarModo()">
+        <option value="geral">Lista Geral (Equipe)</option>
+        <option value="individual">Formulário Individual</option>
+    </select>
+
+    <button class="btn-gps" onclick="obterLocalizacao()" id="btn-gps">📍 Capturar Localização</button>
+
+    <div id="campos-individual" class="hidden">
+        <label class="label-peq">FUNCIONÁRIO:</label>
+        <select id="select-individual"></select>
     </div>
 
-    <div id="corpo-lista"></div>
+    <div id="campos-geral">
+        <div class="card-status">
+            <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
+            <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
+            <div class="status-box"><span id="count-viagem">0</span><label>Viagem</label></div>
+            <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+            <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
+        </div>
+        <div id="corpo-lista"></div>
+    </div>
 
     <button onclick="enviarWhatsapp()">🚀 Enviar para Mirielly</button>
 </div>
@@ -53,17 +69,21 @@
     ];
     
     const listaDiv = document.getElementById('corpo-lista');
+    const selectIndividual = document.getElementById('select-individual');
+    let localizacaoAtual = "";
 
     function carregarLista() {
         listaDiv.innerHTML = "";
+        selectIndividual.innerHTML = "";
         equipe.forEach((nome, i) => {
+            // Preenche lista geral
             listaDiv.innerHTML += `
                 <div class="item-lista">
                     <div class="item-info">
                         <input type="checkbox" id="check-${i}" checked onchange="monitorar(${i})">
                         <span class="nome-func" id="label-${i}">${nome}</span>
                     </div>
-                    <select id="motivo-${i}" class="hidden" onchange="monitorar()">
+                    <select id="motivo-${i}" class="hidden" style="width: auto; margin-bottom: 0;" onchange="monitorar()">
                         <option value="Falta sem justificativa">❌ Falta</option>
                         <option value="atestado">🏥 Atestado</option>
                         <option value="Férias">🌴 Férias</option>
@@ -72,7 +92,30 @@
                     </select>
                 </div>
             `;
+            // Preenche select individual
+            selectIndividual.innerHTML += `<option value="${nome}">${nome}</option>`;
         });
+    }
+
+    function alternarModo() {
+        const modo = document.getElementById('modo-envio').value;
+        document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
+        document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
+    }
+
+    function obterLocalizacao() {
+        const btn = document.getElementById('btn-gps');
+        if (navigator.geolocation) {
+            btn.innerText = "⌛ Localizando...";
+            navigator.geolocation.getCurrentPosition((pos) => {
+                localizacaoAtual = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                btn.innerText = "✅ Localização Capturada";
+                btn.style.backgroundColor = "#075E54";
+            }, () => {
+                alert("Erro ao obter localização. Verifique o GPS.");
+                btn.innerText = "❌ Erro no GPS";
+            });
+        }
     }
 
     function monitorar(index) {
@@ -103,33 +146,46 @@
     }
 
     function enviarWhatsapp() {
+        const modo = document.getElementById('modo-envio').value;
         const dataHoje = new Date().toLocaleDateString('pt-BR');
-        let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
+        const locTxt = localizacaoAtual ? `📍 Localização: ${localizacaoAtual}\n` : "";
+        let msg = "";
 
-        equipe.forEach((nome, i) => {
-            const cb = document.getElementById(`check-${i}`);
-            const nomeFormatado = `_${nome}_`; // Adiciona sublinhado (itálico no WhatsApp)
-            
-            if (cb.checked) pres.push(nomeFormatado);
-            else {
-                const mot = document.getElementById(`motivo-${i}`).value;
-                if (mot === "Férias") fer.push(nomeFormatado);
-                else if (mot === "atestado") ate.push(nomeFormatado);
-                else if (mot === "Em Viagem") via.push(nomeFormatado);
-                else if (mot === "Falta Justificada") jus.push(nomeFormatado);
-                else fal.push(nomeFormatado);
-            }
-        });
+        if (modo === "individual") {
+            const nome = selectIndividual.value;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n` +
+                  `✅ *Empresa: Telejur*\n` +
+                  `Data: ${dataHoje}\n` +
+                  `Funcionário: _${nome}_\n` +
+                  `Status: ✔️ Presente na planta\n` +
+                  locTxt;
+        } else {
+            let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
+            equipe.forEach((nome, i) => {
+                const cb = document.getElementById(`check-${i}`);
+                const nomeF = `_${nome}_`;
+                if (cb.checked) pres.push(nomeF);
+                else {
+                    const mot = document.getElementById(`motivo-${i}`).value;
+                    if (mot === "Férias") fer.push(nomeF);
+                    else if (mot === "atestado") ate.push(nomeF);
+                    else if (mot === "Em Viagem") via.push(nomeF);
+                    else if (mot === "Falta Justificada") jus.push(nomeF);
+                    else fal.push(nomeF);
+                }
+            });
 
-        let msg = `Segue Lista de frequência de hoje. Atentar nas observações.\n\n` +
-            `✅ *Empresa: Telejur*\n` +
-            `Data: ${dataHoje}\n\n` +
-            `✔️Efetivo na planta: ${pres.length}\n${pres.join('\n')}\n\n` +
-            `✔️Férias (${fer.length})${fer.length ? ': ' + fer.join(', ') : ''}\n\n` +
-            `✔️atestado (${ate.length})${ate.length ? ': ' + ate.join(', ') : ''}\n\n` +
-            `✔️Em viagem (${via.length})${via.length ? ': ' + via.join(', ') : ''}\n\n` +
-            `✔️Falta justificada (${jus.length})${jus.length ? ': ' + jus.join(', ') : ''}\n\n` +
-            `✔️Falta sem justificativa (${fal.length})${fal.length ? ': ' + fal.join(', ') : ''}`;
+            msg = `Segue Lista de frequência de hoje.\n\n` +
+                  `✅ *Empresa: Telejur*\n` +
+                  `Data: ${dataHoje}\n` +
+                  locTxt + `\n` +
+                  `✔️Efetivo na planta: ${pres.length}\n${pres.join('\n')}\n\n` +
+                  `✔️Férias (${fer.length})${fer.length ? ': ' + fer.join(', ') : ''}\n\n` +
+                  `✔️atestado (${ate.length})${ate.length ? ': ' + ate.join('\n') : ''}\n\n` +
+                  `✔️Em viagem (${via.length})${via.length ? ': ' + via.join('\n') : ''}\n\n` +
+                  `✔️Falta justificada (${jus.length})${jus.length ? ': ' + jus.join('\n') : ''}\n\n` +
+                  `✔️Falta sem justificativa (${fal.length})${fal.length ? ': ' + fal.join('\n') : ''}`;
+        }
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
