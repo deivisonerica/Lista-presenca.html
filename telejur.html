@@ -22,7 +22,7 @@
         select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
         .hidden { display: none; }
 
-        .btn-gps { background-color: #34b7f1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; transition: 0.3s; }
+        .btn-gps { background-color: #34b7f1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
         button.enviar:hover { background-color: #128C7E; }
         .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
@@ -39,7 +39,7 @@
         <option value="individual">Formulário Individual</option>
     </select>
 
-    <div id="status-gps" class="btn-gps">⌛ Verificando sua posição na planta...</div>
+    <div id="status-gps" class="btn-gps">⌛ Validando localização...</div>
 
     <div id="campos-individual" class="hidden">
         <label class="label-peq">FUNCIONÁRIO:</label>
@@ -68,13 +68,13 @@
         "Welyton Pereira", "Ruan Barros", "Rafael Gonçalves"
     ];
 
-    // Coordenadas das unidades Alcoa Juruti
-    const unidadesAlcoa = [
-        { nome: "Alcoa Juruti Porto", lat: -2.1555, lon: -56.0955 },
-        { nome: "Alcoa Juruti Beneficiamento", lat: -2.4488, lon: -56.1708 }
+    // Coordenadas de referência Alcoa Juruti
+    const pontosAlcoa = [
+        { nome: "Alcoa Juruti Porto", lat: -2.155555, lon: -56.095555 },
+        { nome: "Alcoa Juruti Beneficiamento", lat: -2.448888, lon: -56.170888 }
     ];
     
-    let dadosLocalizacao = { link: "", endereco: "Detectando...", statusPlanta: "Fora da Planta" };
+    let dadosLocalizacao = { link: "", endereco: "Não identificada" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -106,13 +106,13 @@
         document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
     }
 
-    // Identifica se está no Porto, Beneficiamento ou Fora
-    function definirStatusPlanta(lat, lon) {
-        for (const unidade of unidadesAlcoa) {
-            const dist = Math.sqrt(Math.pow(lat - unidade.lat, 2) + Math.pow(lon - unidade.lon, 2));
-            if (dist < 0.009) return unidade.nome; // Raio de segurança de aproximadamente 1km
+    // Identifica se está no Porto ou Beneficiamento (raio de ~800m)
+    function identificarPlanta(lat, lon) {
+        for (const ponto of pontosAlcoa) {
+            const dist = Math.sqrt(Math.pow(lat - ponto.lat, 2) + Math.pow(lon - ponto.lon, 2));
+            if (dist < 0.008) return ponto.nome; 
         }
-        return "Fora da Planta";
+        return null;
     }
 
     async function obterLocalizacaoAuto() {
@@ -123,28 +123,36 @@
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
             dadosLocalizacao.link = `https://www.google.com/maps?q=${lat},${lon}`;
-            
-            const localDetectado = definirStatusPlanta(lat, lon);
-            dadosLocalizacao.statusPlanta = localDetectado;
 
-            if (localDetectado !== "Fora da Planta") {
-                dadosLocalizacao.endereco = localDetectado;
-                statusGps.innerText = "📍 " + localDetectado;
+            const plantaDetectada = identificarPlanta(lat, lon);
+            
+            if (plantaDetectada) {
+                dadosLocalizacao.endereco = plantaDetectada;
+                statusGps.innerText = "✅ Local: " + plantaDetectada;
                 statusGps.style.backgroundColor = "#075E54";
             } else {
                 try {
+                    // Se não estiver na planta, busca o endereço da rua e cidade
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                     const data = await res.json();
-                    dadosLocalizacao.endereco = data.display_name ? data.display_name.split(',').slice(0, 2).join(',') : "Local Externo";
-                    statusGps.innerText = "⚠️ Fora da Planta: " + dadosLocalizacao.endereco;
-                    statusGps.style.backgroundColor = "#856404";
+                    
+                    if (data.address) {
+                        const rua = data.address.road || "Rua não identificada";
+                        const cidade = data.address.city || data.address.town || "Juruti";
+                        dadosLocalizacao.endereco = `${rua}, ${cidade}`;
+                    } else {
+                        dadosLocalizacao.endereco = "Juruti - PA";
+                    }
+                    
+                    statusGps.innerText = "📍 " + dadosLocalizacao.endereco;
+                    statusGps.style.backgroundColor = "#075E54";
                 } catch (e) {
-                    dadosLocalizacao.endereco = "Área Externa";
-                    statusGps.innerText = "⚠️ Fora da Planta";
+                    dadosLocalizacao.endereco = "Juruti - PA";
+                    statusGps.innerText = "✅ Localização Capturada";
                 }
             }
         }, () => {
-            statusGps.innerText = "❌ GPS Necessário para validar local";
+            statusGps.innerText = "⚠️ Ative o GPS";
             statusGps.style.backgroundColor = "#d9534f";
         });
     }
@@ -158,11 +166,10 @@
             if (!cb.checked) {
                 sel.classList.remove('hidden');
                 txt.style.color = "#aaa";
-                const val = sel.value;
-                if (val === "Férias") f++;
-                else if (val === "atestado") a++;
-                else if (val === "Em Viagem") v++;
-                else if (val === "Falta Justificada") j++;
+                if (sel.value === "Férias") f++;
+                else if (sel.value === "atestado") a++;
+                else if (sel.value === "Em Viagem") v++;
+                else if (sel.value === "Falta Justificada") j++;
                 else faltas++;
             } else {
                 sel.classList.add('hidden');
@@ -179,11 +186,7 @@
     function enviarWhatsapp() {
         const modo = document.getElementById('modo-envio').value;
         const dataHoje = new Date().toLocaleDateString('pt-BR');
-        
-        // Status destacado no início do relatório
-        const locHeader = `📍 *LOCALIZAÇÃO:* ${dadosLocalizacao.endereco}\n` +
-                          `📌 *STATUS:* ${dadosLocalizacao.statusPlanta}\n` +
-                          `🔗 *Link:* ${dadosLocalizacao.link}\n`;
+        const locMsg = `📍 *Local:* ${dadosLocalizacao.endereco}\n🔗 *Link:* ${dadosLocalizacao.link}\n`;
 
         let msg = "";
 
@@ -192,8 +195,9 @@
             msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n` +
                   `✅ *Empresa: Telejur*\n` +
                   `Data: ${dataHoje}\n` +
-                  `Funcionário: _${nome}_\n\n` +
-                  locHeader;
+                  `Funcionário: _${nome}_\n` +
+                  `Status: ✔️ Presente\n\n` +
+                  locMsg;
         } else {
             let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
             equipe.forEach((nome, i) => {
@@ -212,11 +216,11 @@
 
             msg = `*LISTA DE FREQUÊNCIA TELEJUR*\n\n` +
                   `📅 Data: ${dataHoje}\n\n` +
-                  locHeader + `\n` +
-                  `✔️ *Presentes na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
+                  locMsg + `\n` +
+                  `✔️ *Efetivo na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
                   `🌴 Férias: ${fer.length}\n` +
                   `🏥 Atestado: ${ate.length}\n` +
-                  `✈️ Viagem: ${via.length}\n` +
+                  `✈️ Em viagem: ${via.length}\n` +
                   `✅ Justificadas: ${jus.length}\n` +
                   `❌ Faltas: ${fal.length}`;
         }
