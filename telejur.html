@@ -22,11 +22,10 @@
         select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
         .hidden { display: none; }
 
-        /* Barra de Status do GPS */
-        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; transition: 0.3s; }
+        /* Barra de Status Dinâmica */
+        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; line-height: 1.4; }
         
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        button.enviar:hover { background-color: #128C7E; }
         .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
     </style>
 </head>
@@ -74,7 +73,7 @@
         { nome: "ALCOA - BENEFICIAMENTO", lat: -2.4488, lon: -56.1708 }
     ];
 
-    let dadosLoc = { link: "", enderecoRua: "", statusAmigavel: "", unidadeAlcoa: "" };
+    let dadosLoc = { link: "", enderecoFormatado: "", unidadeMsg: "", statusMsg: "" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -119,35 +118,37 @@
             const lat = pos.coords.latitude; const lon = pos.coords.longitude;
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
             
-            let unidadeEncontrada = null;
+            let plantaIdentificada = null;
             for (const p of pontosAlcoa) {
-                // Cálculo de distância (raio de ~1km)
-                if (Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2)) < 0.009) unidadeEncontrada = p.nome;
+                // Raio de proximidade Alcoa
+                if (Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2)) < 0.009) plantaIdentificada = p.nome;
             }
 
-            if (unidadeEncontrada) {
-                dadosLoc.unidadeAlcoa = unidadeEncontrada;
-                dadosLoc.statusAmigavel = "Presente na Planta";
-                dadosLoc.enderecoRua = unidadeEncontrada;
+            if (plantaIdentificada) {
+                dadosLoc.unidadeMsg = plantaIdentificada;
+                dadosLoc.enderecoFormatado = plantaIdentificada;
+                dadosLoc.statusMsg = "Presente na Planta";
                 
-                // NO SISTEMA: Mostra a planta específica
-                statusGps.innerText = "✅ " + unidadeEncontrada;
+                statusGps.innerHTML = `✅ ${plantaIdentificada}`;
                 statusGps.style.backgroundColor = "#075E54";
             } else {
-                dadosLoc.unidadeAlcoa = "FORA DA PLANTA";
-                dadosLoc.statusAmigavel = "Ausente (Local Externo)";
-                
-                // NO SISTEMA: Mostra Fora da Planta
-                statusGps.innerText = "🛑 FORA DA PLANTA";
-                statusGps.style.backgroundColor = "#d9534f";
-
-                // Busca o endereço amigável apenas para o relatório do WhatsApp
                 try {
                     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
                     const data = await res.json();
-                    dadosLoc.enderecoRua = (data.address.road || "Rua não identificada") + " - " + (data.address.city || "Juruti");
+                    const rua = data.address.road || "Rua não identificada";
+                    const bairro = data.address.suburb || data.address.neighbourhood || "Bairro não identificado";
+                    
+                    dadosLoc.unidadeMsg = "FORA DA PLANTA";
+                    dadosLoc.enderecoFormatado = `${rua}, ${bairro}`;
+                    dadosLoc.statusMsg = "Ausente (Local Externo)";
+                    
+                    // NO SISTEMA: Detalha a rua e bairro na barra vermelha
+                    statusGps.innerHTML = `🛑 FORA DA PLANTA<br><span style="font-size:11px; font-weight:normal;">${rua}, ${bairro}</span>`;
+                    statusGps.style.backgroundColor = "#d9534f";
                 } catch (e) {
-                    dadosLoc.enderecoRua = "Local Externo";
+                    dadosLoc.unidadeMsg = "FORA DA PLANTA";
+                    dadosLoc.enderecoFormatado = "Local Externo";
+                    statusGps.innerText = "🛑 FORA DA PLANTA";
                 }
             }
         });
@@ -179,7 +180,7 @@
 
         if (modo === "individual") {
             const nome = document.getElementById('select-individual').value;
-            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\n📅 Data: ${data}\n👤 Funcionário: _${nome}_\n\n🏢 *Unidade:* ${dadosLoc.unidadeAlcoa}\n📍 *Localização:* ${dadosLoc.enderecoRua}\n📊 *Status:* ${dadosLoc.statusAmigavel}\n🔗 *Link GPS:* ${dadosLoc.link}`;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\n📅 Data: ${data}\n👤 Funcionário: _${nome}_\n\n🏢 *Unidade:* ${dadosLoc.unidadeMsg}\n📍 *Local:* ${dadosLoc.enderecoFormatado}\n📊 *Status:* ${dadosLoc.statusMsg}\n🔗 *Link GPS:* ${dadosLoc.link}`;
         } else {
             let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
             equipe.forEach((nome, i) => {
@@ -195,7 +196,7 @@
                 }
             });
 
-            msg = `Segue Lista de frequência de hoje. Atentar nas observações.\n\n✅ *Empresa: Telejur*\nData: ${data}\n\n` +
+            msg = `Segue Lista de frequência de hoje.\n\n✅ *Empresa: Telejur*\nData: ${data}\n\n` +
                   `✔️ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n` +
                   `✔️ *Férias (${cat.ferias.length})*${cat.ferias.length > 0 ? ': ' + cat.ferias.join(', ') : ''}\n\n` +
                   `✔️ *Atestado (${cat.atestado.length})*${cat.atestado.length > 0 ? ': ' + cat.atestado.join(', ') : ''}\n\n` +
