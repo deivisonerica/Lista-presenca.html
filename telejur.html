@@ -24,7 +24,7 @@
 
         .btn-gps { background-color: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        button.enviar:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+        button.enviar:hover { background-color: #128C7E; }
         .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
     </style>
 </head>
@@ -36,10 +36,10 @@
     <label class="label-peq">MODO DE ENVIO:</label>
     <select id="modo-envio" onchange="alternarModo()">
         <option value="geral">Lista Geral (Equipe)</option>
-        <option value="individual">Formulário Individual (Requer GPS)</option>
+        <option value="individual">Formulário Individual (Validar Local)</option>
     </select>
 
-    <div id="status-gps" class="btn-gps hidden">⌛ Aguardando validação de local...</div>
+    <div id="status-gps" class="btn-gps hidden">⌛ Aguardando Localização...</div>
 
     <div id="campos-individual" class="hidden">
         <label class="label-peq">FUNCIONÁRIO:</label>
@@ -73,7 +73,7 @@
         { nome: "Alcoa Juruti Beneficiamento", lat: -2.448888, lon: -56.170888 }
     ];
     
-    let dadosLocalizacao = { link: "", endereco: "Não validado", statusFrequencia: "N/A" };
+    let dadosLocalizacao = { link: "", endereco: "Local não identificado", statusFrequencia: "Ausente" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
@@ -102,18 +102,15 @@
     function alternarModo() {
         const modo = document.getElementById('modo-envio').value;
         const gpsDiv = document.getElementById('status-gps');
-        const btnEnviar = document.getElementById('btn-enviar');
 
         document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
         document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
 
         if (modo === 'individual') {
             gpsDiv.classList.remove('hidden');
-            btnEnviar.disabled = true; // Bloqueia até validar GPS
             obterLocalizacaoAuto();
         } else {
             gpsDiv.classList.add('hidden');
-            btnEnviar.disabled = false; // Geral sempre liberado
             dadosLocalizacao.statusFrequencia = "Equipe Geral";
         }
     }
@@ -128,35 +125,28 @@
 
     function obterLocalizacaoAuto() {
         const statusGps = document.getElementById('status-gps');
-        const btnEnviar = document.getElementById('btn-enviar');
-        
-        if (!navigator.geolocation) {
-            statusGps.innerText = "❌ GPS não suportado";
-            return;
-        }
+        if (!navigator.geolocation) return;
 
         navigator.geolocation.getCurrentPosition((pos) => {
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
-            dadosLocalizacao.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            dadosLocalizacao.link = `http://maps.google.com/maps?q=${lat},${lon}`;
 
             const plantaDetectada = identificarPlanta(lat, lon);
             
             if (plantaDetectada) {
                 dadosLocalizacao.endereco = plantaDetectada;
                 dadosLocalizacao.statusFrequencia = "Presente";
-                statusGps.innerText = "✅ PRESENTE: " + plantaDetectada;
+                statusGps.innerText = "✅ STATUS: PRESENTE (" + plantaDetectada + ")";
                 statusGps.style.backgroundColor = "#075E54";
-                btnEnviar.disabled = false; // Libera envio
             } else {
                 dadosLocalizacao.endereco = "Fora da Planta";
                 dadosLocalizacao.statusFrequencia = "Ausente";
-                statusGps.innerText = "🛑 AUSENTE (Fora da Planta)";
+                statusGps.innerText = "🛑 STATUS: AUSENTE (Fora da Planta)";
                 statusGps.style.backgroundColor = "#d9534f";
-                btnEnviar.disabled = true; // Mantém bloqueado
             }
         }, () => {
-            statusGps.innerText = "⚠️ Ative o GPS para validar";
+            statusGps.innerText = "⚠️ GPS não obtido. Envie manualmente.";
             statusGps.style.backgroundColor = "#856404";
         });
     }
@@ -203,15 +193,26 @@
                   `👤 Funcionário: _${nome}_\n\n` +
                   locInfo;
         } else {
-            let pres = [];
+            let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
             equipe.forEach((nome, i) => {
-                if (document.getElementById(`check-${i}`).checked) pres.push(`_${nome}_`);
+                const cb = document.getElementById(`check-${i}`);
+                const nomeF = `_${nome}_`;
+                if (cb.checked) pres.push(nomeF);
+                else {
+                    const mot = document.getElementById(`motivo-${i}`).value;
+                    if (mot === "Férias") fer.push(nomeF);
+                    else if (mot === "atestado") ate.push(nomeF);
+                    else if (mot === "Em Viagem") via.push(nomeF);
+                    else if (mot === "Falta Justificada") jus.push(nomeF);
+                    else fal.push(nomeF);
+                }
             });
 
             msg = `*LISTA DE FREQUÊNCIA TELEJUR*\n\n` +
                   `📅 Data: ${dataHoje}\n\n` +
                   `✔️ *Efetivo na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
-                  `Relatório Geral da Equipe enviado.`;
+                  `🌴 Férias: ${fer.length} | 🏥 Atestados: ${ate.length}\n` +
+                  `✈️ Viagem: ${via.length} | ❌ Faltas: ${fal.length}`;
         }
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
