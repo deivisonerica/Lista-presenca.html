@@ -129,12 +129,12 @@
             const lon = pos.coords.longitude;
             const agora = new Date();
             dadosLoc.hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            dadosLoc.link = `http://maps.google.com/maps?q=${lat},${lon}`;
+            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
             
             let plantaIdentificada = null;
             for (const p of pontosAlcoa) {
                 const dist = calcularDistanciaMetros(lat, lon, p.lat, p.lon);
-                if (dist <= 500) { // RAIO REDUZIDO PARA 500 METROS
+                if (dist <= 500) { 
                     plantaIdentificada = p.nome;
                     break;
                 }
@@ -154,17 +154,17 @@
                     
                     const rua = data.address.road || data.address.pedestrian || "Via identificada";
                     const bairro = data.address.suburb || data.address.neighbourhood || data.address.village || "Área Externa";
-                    const cidade = data.address.city || data.address.town || "";
 
                     dadosLoc.unidadeMsg = "FORA DA PLANTA";
                     dadosLoc.enderecoFormatado = `${rua}, ${bairro}`;
-                    dadosLoc.statusMsg = `Ausente em ${cidade}`;
+                    dadosLoc.statusMsg = "Ausente da planta"; // STATUS ATUALIZADO
                     
                     statusGps.innerHTML = `🛑 FORA DA PLANTA - ${dadosLoc.hora}<br><span style="font-size:11px; font-weight:normal;">${rua}, ${bairro}</span>`;
                     statusGps.style.backgroundColor = "#d9534f";
                 } catch (e) {
                     dadosLoc.unidadeMsg = "FORA DA PLANTA";
                     dadosLoc.enderecoFormatado = "Localização Externa";
+                    dadosLoc.statusMsg = "Ausente da planta";
                     statusGps.innerText = `🛑 FORA DA PLANTA - ${dadosLoc.hora}`;
                 }
             }
