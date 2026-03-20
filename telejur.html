@@ -1,39 +1,218 @@
-// ... (mantenha as funções carregarLista, alternarModo e monitorar como estão)
-
-// Função ajustada para rodar automaticamente
-async function obterLocalizacaoAutomatica() {
-    if (!navigator.geolocation) return;
-
-    // Tenta capturar a posição assim que abre a página
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequência Telejur - Oficial</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        h2 { color: #075E54; text-align: center; margin-bottom: 20px; font-size: 22px; }
         
-        dadosLocalizacao.link = `https://www.google.com/maps?q=${lat},${lon}`;
+        .card-status { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
+        .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
+        .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
 
-        try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-            const data = await response.json();
-            const addr = data.address;
-            
-            // Se a rua vier vazia ou não identificada, você pode forçar o nome que vimos na imagem
-            let rua = addr.road || 'Rua Deus é Amor'; 
-            dadosLocalizacao.endereco = `${rua}${addr.house_number ? ', ' + addr.house_number : ''} - ${addr.suburb || addr.town || 'Juruti'}`;
-            
-            // Atualiza o botão (que agora serve apenas como indicador visual)
-            const btn = document.getElementById('btn-gps');
-            if(btn) {
-                btn.innerText = "✅ " + dadosLocalizacao.endereco;
-                btn.style.backgroundColor = "#075E54";
-            }
-        } catch (e) {
-            dadosLocalizacao.endereco = "Localização Capturada automaticamente";
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
+        .item-info { display: flex; align-items: center; gap: 10px; }
+        .item-info input { transform: scale(1.3); cursor: pointer; }
+        .nome-func { font-size: 14px; color: #333; }
+        
+        select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
+        .hidden { display: none; }
+
+        .btn-gps { background-color: #34b7f1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+        button.enviar:hover { background-color: #128C7E; }
+        .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 Frequência Telejur</h2>
+
+    <label class="label-peq">MODO DE ENVIO:</label>
+    <select id="modo-envio" onchange="alternarModo()">
+        <option value="geral">Lista Geral (Equipe)</option>
+        <option value="individual">Formulário Individual</option>
+    </select>
+
+    <div id="status-gps" class="btn-gps">⌛ Aguardando Localização...</div>
+
+    <div id="campos-individual" class="hidden">
+        <label class="label-peq">FUNCIONÁRIO:</label>
+        <select id="select-individual"></select>
+    </div>
+
+    <div id="campos-geral">
+        <div class="card-status">
+            <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
+            <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
+            <div class="status-box"><span id="count-viagem">0</span><label>Viagem</label></div>
+            <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+            <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
+        </div>
+        <div id="corpo-lista"></div>
+    </div>
+
+    <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar para Mirielly</button>
+</div>
+
+<script>
+    const equipe = [
+        "Adriano Nascimento", "Cezar Prado", "Deivison Aleidson", 
+        "Edenildo Rodrigues", "Francivaldo Costa", "Joelcinei Guimarães", 
+        "Jean Soares", "Lucas Santos", "Matheus Costa", 
+        "Welyton Pereira", "Ruan Barros", "Rafael Gonçalves"
+    ];
+    
+    const listaDiv = document.getElementById('corpo-lista');
+    const selectIndividual = document.getElementById('select-individual');
+    let dadosLocalizacao = { link: "", endereco: "Não identificada" };
+
+    function carregarLista() {
+        listaDiv.innerHTML = "";
+        selectIndividual.innerHTML = "";
+        equipe.forEach((nome, i) => {
+            listaDiv.innerHTML += `
+                <div class="item-lista">
+                    <div class="item-info">
+                        <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
+                        <span class="nome-func" id="label-${i}">${nome}</span>
+                    </div>
+                    <select id="motivo-${i}" class="hidden" style="width: auto; margin-bottom: 0;" onchange="monitorar()">
+                        <option value="Falta sem justificativa">❌ Falta</option>
+                        <option value="atestado">🏥 Atestado</option>
+                        <option value="Férias">🌴 Férias</option>
+                        <option value="Em Viagem">✈️ Viagem</option>
+                        <option value="Falta Justificada">✅ Justificada</option>
+                    </select>
+                </div>`;
+            selectIndividual.innerHTML += `<option value="${nome}">${nome}</option>`;
+        });
+    }
+
+    function alternarModo() {
+        const modo = document.getElementById('modo-envio').value;
+        document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
+        document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
+    }
+
+    async function obterLocalizacaoAuto() {
+        const statusGps = document.getElementById('status-gps');
+        if (!navigator.geolocation) {
+            statusGps.innerText = "❌ GPS não suportado";
+            return;
         }
-    });
-}
 
-// Inicializa tudo ao carregar a página
-window.onload = function() {
-    carregarLista();
-    obterLocalizacaoAutomatica(); // Chama o GPS sozinho
-};
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+            dadosLocalizacao.link = `https://www.google.com/maps?q=${lat},${lon}`;
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                const data = await response.json();
+                
+                if (data.display_name) {
+                    dadosLocalizacao.endereco = data.display_name.split(',').slice(0, 3).join(',');
+                    statusGps.innerText = "✅ " + dadosLocalizacao.endereco;
+                } else {
+                    dadosLocalizacao.endereco = "Coordenadas capturadas";
+                    statusGps.innerText = "✅ Localização Pronta";
+                }
+                statusGps.style.backgroundColor = "#075E54";
+            } catch (e) {
+                dadosLocalizacao.endereco = "Localização capturada";
+                statusGps.innerText = "✅ Localização Pronta";
+                statusGps.style.backgroundColor = "#075E54";
+            }
+        }, () => {
+            statusGps.innerText = "⚠️ Ative o GPS para enviar a localização";
+            statusGps.style.backgroundColor = "#d9534f";
+        });
+    }
+
+    function monitorar() {
+        let f = 0, a = 0, v = 0, j = 0, faltas = 0;
+        equipe.forEach((_, i) => {
+            const cb = document.getElementById(`check-${i}`);
+            const sel = document.getElementById(`motivo-${i}`);
+            const txt = document.getElementById(`label-${i}`);
+            if (!cb.checked) {
+                sel.classList.remove('hidden');
+                txt.style.color = "#aaa";
+                if (sel.value === "Férias") f++;
+                else if (sel.value === "atestado") a++;
+                else if (sel.value === "Em Viagem") v++;
+                else if (sel.value === "Falta Justificada") j++;
+                else faltas++;
+            } else {
+                sel.classList.add('hidden');
+                txt.style.color = "#000";
+            }
+        });
+        document.getElementById('count-ferias').innerText = f;
+        document.getElementById('count-atestado').innerText = a;
+        document.getElementById('count-viagem').innerText = v;
+        document.getElementById('count-faltajust').innerText = j;
+        document.getElementById('count-faltas').innerText = faltas;
+    }
+
+    function enviarWhatsapp() {
+        const modo = document.getElementById('modo-envio').value;
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+        const locMsg = dadosLocalizacao.link 
+            ? `📍 *Local:* ${dadosLocalizacao.endereco}\n🔗 *Link:* ${dadosLocalizacao.link}\n` 
+            : "";
+
+        let msg = "";
+
+        if (modo === "individual") {
+            const nome = selectIndividual.value;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n` +
+                  `✅ *Empresa: Telejur*\n` +
+                  `Data: ${dataHoje}\n` +
+                  `Funcionário: _${nome}_\n` +
+                  `Status: ✔️ Presente na planta\n\n` +
+                  locMsg;
+        } else {
+            let pres = [], fer = [], ate = [], via = [], jus = [], fal = [];
+            equipe.forEach((nome, i) => {
+                const cb = document.getElementById(`check-${i}`);
+                const nomeF = `_${nome}_`;
+                if (cb.checked) pres.push(nomeF);
+                else {
+                    const mot = document.getElementById(`motivo-${i}`).value;
+                    if (mot === "Férias") fer.push(nomeF);
+                    else if (mot === "atestado") ate.push(nomeF);
+                    else if (mot === "Em Viagem") via.push(nomeF);
+                    else if (mot === "Falta Justificada") jus.push(nomeF);
+                    else fal.push(nomeF);
+                }
+            });
+
+            msg = `Segue Lista de frequência de hoje.\n\n` +
+                  `✅ *Empresa: Telejur*\n` +
+                  `Data: ${dataHoje}\n\n` +
+                  locMsg + `\n` +
+                  `✔️*Efetivo na planta:* ${pres.length}\n${pres.join('\n')}\n\n` +
+                  `✔️Férias (${fer.length})${fer.length ? ': ' + fer.join(', ') : ''}\n\n` +
+                  `✔️atestado (${ate.length})${ate.length ? ': ' + ate.join(', ') : ''}\n\n` +
+                  `✔️Em viagem (${via.length})${via.length ? ': ' + via.join(', ') : ''}\n\n` +
+                  `✔️Falta justificada (${jus.length})${jus.length ? ': ' + jus.join(', ') : ''}\n\n` +
+                  `✔️Falta sem justificativa (${fal.length})${fal.length ? ': ' + fal.join(', ') : ''}`;
+        }
+
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
+    }
+
+    window.onload = () => {
+        carregarLista();
+        obterLocalizacaoAuto();
+    };
+</script>
+</body>
+</html>
