@@ -2,30 +2,41 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Frequência Telejur - Oficial</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-        h2 { color: #075E54; text-align: center; margin-bottom: 20px; font-size: 22px; }
+        :root { --whatsapp: #25D366; --dark-green: #075E54; --red: #d9534f; --gray: #6c757d; --bg: #f0f2f5; }
         
-        .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
-        .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
-        .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); padding: 15px; display: flex; justify-content: center; margin: 0; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); box-sizing: border-box; }
+        
+        h2 { color: var(--dark-green); text-align: center; margin-bottom: 20px; font-size: 22px; text-transform: uppercase; border-bottom: 2px solid var(--whatsapp); padding-bottom: 10px; }
+        
+        /* Dashboard de Contagem */
+        .card-status { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px; }
+        .status-box { background: #f8f9fa; padding: 8px 2px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
+        .status-box span { display: block; font-size: 16px; font-weight: bold; color: var(--dark-green); }
         .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
 
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
-        .item-info { display: flex; align-items: center; gap: 10px; }
-        .item-info input { transform: scale(1.3); cursor: pointer; }
-        .nome-func { font-size: 14px; color: #333; }
+        /* Lista de Funcionários */
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
+        .item-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .item-info input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--whatsapp); }
+        .nome-func { font-size: 14px; color: #333; font-weight: 500; }
         
-        select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
+        select { font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; width: 100%; }
+        .sel-motivo { width: auto !important; height: 35px; font-size: 11px !important; padding: 2px !important; border-color: var(--red); color: var(--red); }
+
         .hidden { display: none; }
 
-        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; line-height: 1.4; min-height: 50px; }
+        /* Botão de GPS */
+        .btn-gps { background-color: var(--gray); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 13px; text-align: center; line-height: 1.4; transition: 0.3s; }
         
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
+        /* Botão Enviar */
+        button.enviar { width: 100%; background-color: var(--whatsapp); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); text-transform: uppercase; }
+        button.enviar:active { transform: scale(0.98); }
+
+        .label-peq { font-size: 11px; font-weight: bold; color: var(--dark-green); display: block; margin-bottom: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -33,30 +44,30 @@
 <div class="container">
     <h2>📋 Frequência Telejur</h2>
 
-    <label class="label-peq">MODO DE ENVIO:</label>
+    <label class="label-peq">Modo de Operação:</label>
     <select id="modo-envio" onchange="alternarModo()">
-        <option value="geral">Lista Geral (Equipe)</option>
-        <option value="individual">Formulário Individual (Validar Local)</option>
+        <option value="geral">Lista Geral (Equipe Completa)</option>
+        <option value="individual">Ponto Individual (Validar GPS)</option>
     </select>
 
-    <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
+    <div id="status-gps" class="btn-gps hidden">⌛ Aguardando permissão de localização...</div>
 
     <div id="campos-individual" class="hidden">
-        <label class="label-peq">FUNCIONÁRIO:</label>
+        <label class="label-peq">Selecione seu Nome:</label>
         <select id="select-individual"></select>
     </div>
 
     <div id="campos-geral">
         <div class="card-status">
             <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
-            <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
-            <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+            <div class="status-box"><span id="count-atestado">0</span><label>Atest.</label></div>
+            <div class="status-box"><span id="count-faltajust">0</span><label>F. Just.</label></div>
             <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
         </div>
         <div id="corpo-lista"></div>
     </div>
 
-    <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
+    <button class="enviar" onclick="enviarWhatsapp()">🚀 Gerar Mensagem WhatsApp</button>
 </div>
 
 <script>
@@ -72,37 +83,26 @@
         { nome: "ALCOA - BENEFICIAMENTO", lat: -2.4488, lon: -56.1708 }
     ];
 
-    let dadosLoc = { link: "", enderecoFormatado: "", unidadeMsg: "", statusMsg: "", hora: "" };
-
-    // Função de distância ajustada para precisão matemática
-    function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
-        const R = 6371000; 
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
+    let dadosLoc = { link: "", endereco: "", unidade: "NÃO IDENTIFICADO", status: "Ausente", hora: "" };
 
     function carregarLista() {
         const listaDiv = document.getElementById('corpo-lista');
         const selInd = document.getElementById('select-individual');
         listaDiv.innerHTML = ""; selInd.innerHTML = "";
-        equipe.forEach((nome, i) => {
+        
+        equipe.sort().forEach((nome, i) => {
             listaDiv.innerHTML += `
                 <div class="item-lista">
                     <div class="item-info">
                         <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
                         <span class="nome-func">${nome}</span>
                     </div>
-                    <select id="motivo-${i}" class="hidden" style="width: auto;" onchange="monitorar()">
-                        <option value="Falta sem justificativa">Falta sem justificativa</option>
-                        <option value="Atestado">Atestado</option>
-                        <option value="Férias">Férias</option>
-                        <option value="Em viagem">Em viagem</option>
-                        <option value="Falta justificada">Falta justificada</option>
+                    <select id="motivo-${i}" class="hidden sel-motivo" onchange="monitorar()">
+                        <option value="Falta sem justificativa">FALTA S/ JUST.</option>
+                        <option value="Atestado">ATESTADO</option>
+                        <option value="Férias">FÉRIAS</option>
+                        <option value="Em viagem">EM VIAGEM</option>
+                        <option value="Falta justificada">FALTA JUSTIF.</option>
                     </select>
                 </div>`;
             selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
@@ -121,55 +121,44 @@
         }
     }
 
-    async function obterGps() {
-        const statusGps = document.getElementById('status-gps');
-        if (!navigator.geolocation) return;
+    function obterGps() {
+        const btn = document.getElementById('status-gps');
+        if (!navigator.geolocation) {
+            btn.innerText = "❌ GPS não suportado";
+            return;
+        }
 
         navigator.geolocation.getCurrentPosition(async (pos) => {
             const lat = pos.coords.latitude; 
             const lon = pos.coords.longitude;
-            const agora = new Date();
-            dadosLoc.hora = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
             
-            let plantaIdentificada = null;
-            for (const p of pontosAlcoa) {
-                const dist = calcularDistanciaMetros(lat, lon, p.lat, p.lon);
-                if (dist <= 800) { // PRECISÃO DE 800 METROS
-                    plantaIdentificada = p.nome;
-                    break;
-                }
-            }
+            let planta = null;
+            pontosAlcoa.forEach(p => {
+                const d = Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2)) * 111320; // metros aprox.
+                if (d <= 800) planta = p.nome;
+            });
 
-            if (plantaIdentificada) {
-                dadosLoc.unidadeMsg = plantaIdentificada;
-                dadosLoc.enderecoFormatado = plantaIdentificada;
-                dadosLoc.statusMsg = "Presente na Planta";
-                statusGps.innerHTML = `✅ ${plantaIdentificada} - ${dadosLoc.hora}`;
-                statusGps.style.backgroundColor = "#075E54";
+            if (planta) {
+                dadosLoc.unidade = planta;
+                dadosLoc.status = "Presente na Planta";
+                btn.innerHTML = `✅ ${planta}<br>${dadosLoc.hora}`;
+                btn.style.backgroundColor = "#075E54";
             } else {
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
-                    const data = await res.json();
-                    const rua = data.address.road || data.address.pedestrian || "Via identificada";
-                    const bairro = data.address.suburb || data.address.neighbourhood || "Área Externa";
-
-                    dadosLoc.unidadeMsg = "FORA DA PLANTA";
-                    dadosLoc.enderecoFormatado = `${rua}, ${bairro}`;
-                    dadosLoc.statusMsg = "Ausente da planta";
-                    statusGps.innerHTML = `🛑 FORA DA PLANTA - ${dadosLoc.hora}<br><small>${rua}</small>`;
-                    statusGps.style.backgroundColor = "#d9534f";
-                } catch (e) {
-                    dadosLoc.unidadeMsg = "FORA DA PLANTA";
-                    dadosLoc.statusMsg = "Ausente da planta";
-                    statusGps.innerText = `🛑 FORA DA PLANTA - ${dadosLoc.hora}`;
-                }
+                dadosLoc.unidade = "FORA DA PLANTA";
+                dadosLoc.status = "Trabalho Externo / Ausente";
+                btn.innerHTML = `🛑 FORA DA PLANTA<br>${dadosLoc.hora}`;
+                btn.style.backgroundColor = "#d9534f";
             }
-        }, null, { enableHighAccuracy: true });
+        }, (err) => {
+            btn.innerText = "❌ Ative o GPS para continuar";
+            btn.style.backgroundColor = "#333";
+        }, { enableHighAccuracy: true });
     }
 
     function monitorar() {
-        let f = 0, a = 0, j = 0, s = 0;
+        let f=0, a=0, j=0, s=0;
         equipe.forEach((_, i) => {
             const cb = document.getElementById(`check-${i}`);
             const sel = document.getElementById(`motivo-${i}`);
@@ -194,29 +183,24 @@
 
         if (modo === "individual") {
             const nome = document.getElementById('select-individual').value;
-            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\n📅 Data: ${data}\n⏰ Hora: ${dadosLoc.hora}\n👤 Funcionário: _${nome}_\n\n🏢 *Unidade:* ${dadosLoc.unidadeMsg}\n📍 *Local:* ${dadosLoc.enderecoFormatado}\n📊 *Status:* ${dadosLoc.statusMsg}\n🔗 *Link GPS:* ${dadosLoc.link}`;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n` +
+                  `👤 *Funcionário:* ${nome}\n` +
+                  `📅 *Data:* ${data}\n` +
+                  `⏰ *Hora:* ${dadosLoc.hora}\n\n` +
+                  `🏢 *Unidade:* ${dadosLoc.unidade}\n` +
+                  `📊 *Status:* ${dadosLoc.status}\n` +
+                  `📍 *Local:* ${dadosLoc.link}`;
         } else {
-            let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
+            let planta = [], ausentes = [];
             equipe.forEach((nome, i) => {
-                const cb = document.getElementById(`check-${i}`);
-                if (cb.checked) cat.planta.push(`_${nome}_`);
-                else {
-                    const mot = document.getElementById(`motivo-${i}`).value;
-                    if (mot === "Férias") cat.ferias.push(`_${nome}_`);
-                    else if (mot === "Atestado") cat.atestado.push(`_${nome}_`);
-                    else if (mot === "Em viagem") cat.viagem.push(`_${nome}_`);
-                    else if (mot === "Falta justificada") cat.just.push(`_${nome}_`);
-                    else cat.falta.push(`_${nome}_`);
-                }
+                if (document.getElementById(`check-${i}`).checked) planta.push(`- _${nome}_`);
+                else ausentes.push(`- _${nome}_ (*${document.getElementById(`motivo-${i}`).value}*)`);
             });
 
-            msg = `Segue Lista de frequência de hoje.\n\n✅ *Empresa: Telejur*\nData: ${data}\n\n` +
-                  `✔️ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n` +
-                  `✔️ *Férias (${cat.ferias.length})*${cat.ferias.length > 0 ? ': ' + cat.ferias.join(', ') : ''}\n\n` +
-                  `✔️ *Atestado (${cat.atestado.length})*${cat.atestado.length > 0 ? ': ' + cat.atestado.join(', ') : ''}\n\n` +
-                  `✔️ *Em viagem (${cat.viagem.length})*${cat.viagem.length > 0 ? ': ' + cat.viagem.join(', ') : ''}\n\n` +
-                  `✔️ *Falta justificada (${cat.just.length})*${cat.just.length > 0 ? ': ' + cat.just.join(', ') : ''}\n\n` +
-                  `✔️ *Faltas (${cat.falta.length})*${cat.falta.length > 0 ? ': ' + cat.falta.join(', ') : ''}`;
+            msg = `*FREQUÊNCIA DIÁRIA TELEJUR*\n` +
+                  `📅 *Data:* ${data}\n\n` +
+                  `✅ *NA PLANTA (${planta.length}):*\n${planta.join('\n')}\n\n` +
+                  `❌ *AUSÊNCIAS (${ausentes.length}):*\n${ausentes.join('\n') || "_Nenhuma_"}`;
         }
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
