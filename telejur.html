@@ -10,55 +10,76 @@
             --bg-light: #f4f7f9;
             --text-main: #33475b;
             --success-green: #25D366;
+            --danger-red: #d9534f;
         }
 
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-light); padding: 15px; display: flex; justify-content: center; margin: 0; }
         .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; }
         
-        /* Título e Botão Admin */
         h2 { color: var(--primary-blue); text-align: center; margin: 45px 0 20px 0; font-size: 18px; border: 2px solid var(--primary-blue); padding: 12px; border-radius: 12px; text-transform: uppercase; background: #f0f7ff; }
         .btn-admin-top { background: var(--primary-blue); border: none; color: white; font-size: 10px; padding: 8px 15px; border-radius: 50px; cursor: pointer; position: absolute; top: 20px; right: 20px; font-weight: bold; text-transform: uppercase; z-index: 10; }
 
-        /* ALINHAMENTO À ESQUERDA GARANTIDO */
-        .item-lista { display: flex; align-items: center; justify-content: flex-start; padding: 12px 10px; border-bottom: 1px solid #f0f3f5; gap: 15px; }
-        .item-info { display: flex; align-items: center; gap: 12px; flex: 1; }
-        .nome-func { font-size: 14px; color: var(--text-main); font-weight: 500; text-align: left; }
+        /* ALINHAMENTO ESQUERDA RADICAL */
+        .item-lista { 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; /* Alinha ao início da linha */
+            padding: 12px 5px; 
+            border-bottom: 1px solid #f0f3f5; 
+            width: 100%;
+        }
+        .item-info { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; /* Distância entre checkbox e nome */
+            flex: 1; 
+        }
+        .nome-func { 
+            font-size: 14px; 
+            color: var(--text-main); 
+            font-weight: 500; 
+            text-align: left; 
+        }
         
-        .motivo-select { width: 130px; padding: 5px; font-size: 11px; border-radius: 8px; border: 1px solid #dce4ec; }
-        select, input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 14px; }
+        .motivo-select { width: 130px; padding: 5px; font-size: 11px; border-radius: 8px; border: 1px solid #dce4ec; margin-left: auto; }
+        select, input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 15px; }
 
-        /* GPS e Tela Final */
-        .btn-gps { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; padding: 15px; border-radius: 12px; font-weight: bold; margin-bottom: 15px; min-height: 70px; background: #6c757d; }
+        .btn-gps { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            text-align: center; color: white; padding: 15px; border-radius: 12px; 
+            font-weight: bold; margin-bottom: 15px; min-height: 70px; background: #6c757d; 
+            line-height: 1.2;
+        }
+
         #tela-final { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-blue); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; text-align: center; padding: 20px; }
-        
         .hidden { display: none !important; }
-        button.enviar { width: 100%; background: var(--success-green); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(37,211,102,0.3); }
+        button.enviar { width: 100%; background: var(--success-green); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 15px; font-weight: bold; cursor: pointer; }
         
-        #admin-area { border: 2px dashed var(--primary-blue); padding: 15px; margin-top: 20px; border-radius: 12px; background: #f9fcff; }
+        #admin-area { border: 2px solid var(--primary-blue); padding: 15px; margin-top: 20px; border-radius: 12px; background: #f9fcff; }
     </style>
 </head>
 <body>
 
 <div id="tela-final" class="hidden">
-    <h1 style="font-size: 50px; margin: 0;">✅</h1>
+    <h1 style="font-size: 50px;">✅</h1>
     <h1 id="msg-agradecimento"></h1>
-    <p>Seu registro foi enviado.</p>
-    <button onclick="window.location.reload()" style="background:white; color:var(--primary-blue); border:none; padding:12px 30px; border-radius:10px; font-weight:bold; margin-top:20px; cursor:pointer;">VOLTAR</button>
+    <p>Registro concluído com sucesso.</p>
+    <button onclick="window.location.reload()" style="background:white; color:var(--primary-blue); border:none; padding:12px 30px; border-radius:10px; font-weight:bold; margin-top:20px;">VOLTAR</button>
 </div>
 
 <div class="container">
     <button class="btn-admin-top" onclick="abrirPainelAdmin()">⚙️ Admin</button>
-    <div id="loading">⌛ Sincronizando Telejur...</div>
+    <div id="loading">⌛ Carregando Telejur...</div>
 
     <div id="conteudo" class="hidden">
         <h2>Frequência Telejur</h2>
 
         <select id="modo-envio" onchange="alternarModo()">
             <option value="geral">Lista Geral (Equipe)</option>
-            <option value="individual">Ponto Individual (GPS)</option>
+            <option value="individual">Ponto Individual (Validar Local)</option>
         </select>
 
-        <div id="status-gps" class="btn-gps hidden">Aguardando GPS...</div>
+        <div id="status-gps" class="btn-gps hidden">Buscando sinal GPS...</div>
 
         <div id="campos-individual" class="hidden">
             <select id="select-individual"></select>
@@ -68,30 +89,43 @@
             <div id="corpo-lista"></div>
         </div>
 
-        <button class="enviar" onclick="enviarTudo()">🚀 ENVIAR NO WHATSAPP</button>
+        <button id="btn-enviar-wa" class="enviar" onclick="enviarWhatsapp()">🚀 ENVIAR RELATÓRIO</button>
 
         <div id="admin-area" class="hidden">
-            <p style="font-size: 11px; font-weight: bold; color: var(--primary-blue); margin: 0 0 10px 0;">GERENCIAR EQUIPE</p>
-            <input type="text" id="novo-nome" placeholder="Nome do Colaborador">
-            <input type="password" id="senha-admin" placeholder="Senha Admin">
-            <button onclick="addFunc()" style="width:100%; background:var(--primary-blue); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer;">CADASTRAR</button>
-            <div id="lista-admin-corpo" style="margin-top:15px; max-height:150px; overflow-y:auto;"></div>
+            <h4 style="color:var(--primary-blue); margin-top:0;">GERENCIAR EQUIPE</h4>
+            <input type="text" id="novo-nome" placeholder="Nome Completo">
+            <input type="password" id="senha-admin" placeholder="Senha Mestra">
+            <button onclick="addFunc()" style="width:100%; background:var(--primary-blue); color:white; border:none; padding:12px; border-radius:10px; font-weight:bold;">CADASTRAR</button>
+            <div id="lista-admin-corpo" style="margin-top:15px; max-height:150px; overflow-y:auto; background:white; border-radius:8px;"></div>
         </div>
     </div>
 </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
+    const pontosAlcoa = [
+        { nome: "ALCOA - PORTO", lat: -2.1677, lon: -56.1017 },
+        { nome: "ALCOA - BENEFICIAMENTO", lat: -2.4488, lon: -56.1708 }
+    ];
+
     let equipe = [];
-    let dadosLoc = { link: "", unidade: "NÃO IDENTIFICADO", hora: "" };
+    let dadosLoc = { link: "", unidade: "FORA DA PLANTA", hora: "" };
 
     function emitirBip() {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.value = 800; gain.gain.value = 0.1;
-        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        osc.frequency.value = 900; gain.gain.value = 0.1;
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371000; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
     }
 
     async function carregarEquipe() {
@@ -101,7 +135,7 @@
             renderizarListas();
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('conteudo').classList.remove('hidden');
-        } catch (e) { document.getElementById('loading').innerText = "❌ Erro ao carregar."; }
+        } catch (e) { document.getElementById('loading').innerText = "Erro ao conectar."; }
     }
 
     function renderizarListas() {
@@ -112,23 +146,45 @@
         listaGeral.innerHTML = ""; selInd.innerHTML = ""; listaAdmin.innerHTML = "";
 
         equipe.forEach((nome, i) => {
-            // Lista Geral
             listaGeral.innerHTML += `
                 <div class="item-lista">
-                    <input type="checkbox" id="check-${i}" checked onchange="document.getElementById('motivo-${i}').classList.toggle('hidden', this.checked)" style="transform: scale(1.3);">
-                    <div class="item-info"><span class="nome-func">${nome}</span></div>
+                    <div class="item-info">
+                        <input type="checkbox" id="check-${i}" checked onchange="document.getElementById('motivo-${i}').classList.toggle('hidden', this.checked)">
+                        <span class="nome-func">${nome}</span>
+                    </div>
                     <select id="motivo-${i}" class="motivo-select hidden">
-                        <option value="Falta Justificada">F. Justificada</option>
-                        <option value="Falta Não Justificada">F. Ñ Justificada</option>
                         <option value="Férias">Férias</option>
+                        <option value="Em viagem">Em viagem</option>
                         <option value="Atestado">Atestado</option>
+                        <option value="Falta Justificada">F. Justificada</option>
                     </select>
                 </div>`;
-            // Select Individual
             selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
-            // Lista Admin
-            listaAdmin.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px solid #eee; font-size:12px;"><span>${nome}</span><span style="color:red; cursor:pointer;" onclick="delFunc('${nome}')">🗑️</span></div>`;
+            listaAdmin.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #eee; font-size:12px;"><span>${nome}</span><span style="color:red; cursor:pointer;" onclick="delFunc('${nome}')">🗑️</span></div>`;
         });
+    }
+
+    function obterGps() {
+        const btn = document.getElementById('status-gps');
+        btn.innerHTML = "⌛ Validando Local...";
+        navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+            dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            let planta = null;
+            pontosAlcoa.forEach(p => { if (calcularDistancia(lat, lon, p.lat, p.lon) <= 800) planta = p.nome; });
+
+            if (planta) {
+                dadosLoc.unidade = planta;
+                btn.innerHTML = `✅ ${planta}<br>${dadosLoc.hora}`;
+                btn.style.background = "#075E54";
+            } else {
+                dadosLoc.unidade = "FORA DA PLANTA";
+                btn.innerHTML = `🛑 FORA DA PLANTA<br>${dadosLoc.hora}`;
+                btn.style.background = "#d9534f";
+            }
+        }, err => { btn.innerHTML = "❌ GPS BLOQUEADO"; }, {enableHighAccuracy: true});
     }
 
     function alternarModo() {
@@ -139,37 +195,17 @@
         else { document.getElementById('status-gps').classList.add('hidden'); }
     }
 
-    function obterGps() {
-        const btn = document.getElementById('status-gps');
-        btn.innerHTML = "⌛ Localizando...";
-        navigator.geolocation.getCurrentPosition(pos => {
-            const lat = pos.coords.latitude; const lon = pos.coords.longitude;
-            dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
-            btn.innerHTML = `📍 GPS ATIVO<br>${dadosLoc.hora}`;
-            btn.style.background = "#075E54";
-        }, null, {enableHighAccuracy: true});
-    }
-
     function abrirPainelAdmin() {
-        if(prompt("Senha Admin:") === "123") document.getElementById('admin-area').classList.toggle('hidden');
+        if(prompt("Senha Administrativa:") === "123") {
+            const adminArea = document.getElementById('admin-area');
+            const btnWA = document.getElementById('btn-enviar-wa');
+            adminArea.classList.toggle('hidden');
+            // SE O ADMIN ESTIVER VISÍVEL, ESCONDE O BOTÃO DE WHATSAPP
+            btnWA.classList.toggle('hidden', !adminArea.classList.contains('hidden'));
+        }
     }
 
-    async function addFunc() {
-        const nome = document.getElementById('novo-nome').value;
-        const senha = document.getElementById('senha-admin').value;
-        const res = await fetch(`${API_URL}?acao=add&nome=${encodeURIComponent(nome)}&senha=${senha}`);
-        if(await res.text() === "OK") location.reload();
-    }
-
-    async function delFunc(nome) {
-        const senha = document.getElementById('senha-admin').value;
-        if(!senha) return alert("Digite a senha!");
-        const res = await fetch(`${API_URL}?acao=deletar&nome=${encodeURIComponent(nome)}&senha=${senha}`);
-        if(await res.text() === "OK") location.reload();
-    }
-
-    function enviarTudo() {
+    function enviarWhatsapp() {
         emitirBip();
         const m = document.getElementById('modo-envio').value;
         const data = new Date().toLocaleDateString('pt-BR');
@@ -177,19 +213,34 @@
 
         if(m === "individual") {
             nomeF = document.getElementById('select-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL*\n📅 ${data}\n👤 Nome: ${nomeF}\n⏰ Hora: ${dadosLoc.hora}\n📍 Mapa: ${dadosLoc.link}`;
+            msg = `*FREQUÊNCIA INDIVIDUAL*\n✅ *Telejur*\n📅 Data: ${data}\n⏰ Hora: ${dadosLoc.hora}\n👤 Nome: _${nomeF}_\n🏢 Unidade: ${dadosLoc.unidade}\n📍 Mapa: ${dadosLoc.link}`;
         } else {
             let p=[], a=[];
             equipe.forEach((n, i) => {
-                if(document.getElementById(`check-${i}`).checked) p.push(`- ${n}`);
-                else a.push(`- ${n} (${document.getElementById(`motivo-${i}`).value})`);
+                if(document.getElementById(`check-${i}`).checked) p.push(`- _${n}_`);
+                else a.push(`- _${n}_ (*${document.getElementById(`motivo-${i}`).value}*)`);
             });
-            msg = `*FREQUÊNCIA TELEJUR*\n📅 ${data}\n\n✅ *PRESENTES:*\n${p.join('\n')}\n\n❌ *AUSÊNCIAS:*\n${a.join('\n') || "_Nenhuma_"}`;
+            msg = `*FREQUÊNCIA TELEJUR*\n📅 Data: ${data}\n\n✅ *PRESENTES:*\n${p.join('\n')}\n\n❌ *AUSÊNCIAS:*\n${a.join('\n') || "_Nenhuma_"}`;
         }
 
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
         document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeF}!`;
         document.getElementById('tela-final').classList.remove('hidden');
+    }
+
+    // Funções de Persistência (Add/Del) - Mesma lógica da API anterior
+    async function addFunc() {
+        const n = document.getElementById('novo-nome').value;
+        const s = document.getElementById('senha-admin').value;
+        const res = await fetch(`${API_URL}?acao=add&nome=${encodeURIComponent(n)}&senha=${s}`);
+        if(await res.text() === "OK") location.reload(); else alert("Senha incorreta.");
+    }
+
+    async function delFunc(nome) {
+        const s = document.getElementById('senha-admin').value;
+        if(!s) return alert("Digite a senha admin!");
+        const res = await fetch(`${API_URL}?acao=deletar&nome=${encodeURIComponent(nome)}&senha=${s}`);
+        if(await res.text() === "OK") location.reload();
     }
 
     window.onload = carregarEquipe;
