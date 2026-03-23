@@ -10,20 +10,30 @@
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
         
         h2 { color: var(--verde-telejur); text-align: center; margin: 35px 0 20px; font-size: 22px; }
-        
-        /* ALINHAMENTO MANTIDO */
+
+        /* ALINHAMENTO BLINDADO (GRID COM LARGURA FIXA NO SELECT) */
         .item-lista { 
             display: grid; 
-            grid-template-columns: 1fr auto; 
+            grid-template-columns: 1fr 130px; /* Nome ocupa tudo, Select tem 130px fixos */
             align-items: center; 
             gap: 10px;
-            padding: 10px 5px; 
-            border-bottom: 1px solid #f1f1f1; 
+            padding: 12px 5px; 
+            border-bottom: 1px solid #f1f1f1;
+            box-sizing: border-box;
         }
-        .item-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .item-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
         .item-info input { transform: scale(1.3); cursor: pointer; flex-shrink: 0; }
         .nome-func { font-size: 14px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .item-lista select { margin-bottom: 0; padding: 5px; font-size: 12px; width: 130px; }
+        
+        /* Estilo do Select dentro da lista */
+        .item-lista select { 
+            width: 130px; 
+            margin-bottom: 0; 
+            padding: 5px; 
+            font-size: 12px; 
+            height: 32px;
+            border-radius: 5px;
+        }
 
         /* Estilos Gerais */
         .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
@@ -34,15 +44,12 @@
         select, input { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; box-sizing: border-box; }
         .hidden { display: none !important; }
 
-        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+        .btn-admin-top { background: var(--azul-admin); border: none; color: white; font-size: 10px; padding: 8px 15px; border-radius: 50px; cursor: pointer; position: absolute; top: 15px; right: 15px; font-weight: bold; }
         
-        /* BOTÃO GESTÃO TOPO */
-        .btn-admin-top { background: var(--azul-admin); border: none; color: white; font-size: 10px; padding: 8px 15px; border-radius: 50px; cursor: pointer; position: absolute; top: 15px; right: 15px; font-weight: bold; text-transform: uppercase; }
-        
-        /* SEÇÃO DE GESTÃO (DESIGN ANTERIOR) */
+        /* SEÇÃO DE GESTÃO DEDICADA */
         #admin-area { border: 2px dashed var(--azul-admin); padding: 20px; border-radius: 12px; background: #f9fcff; margin-top: 10px; }
-        .btn-sair { background: #d9534f; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; text-transform: uppercase; }
+        .btn-sair { background: #d9534f; color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .label-peq { font-size: 12px; font-weight: bold; color: var(--verde-telejur); display: block; margin-bottom: 5px; }
         
         .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; background: white; margin-bottom: 5px; border-radius: 5px; font-size: 14px; }
@@ -51,9 +58,9 @@
 <body>
 
 <div class="container">
-    <button id="btn-admin-trigger" class="btn-admin-top" onclick="abrirPainelAdmin()">⚙️ Gestão</button>
+    <button id="btn-admin-trigger" class="btn-admin-top" onclick="abrirPainelAdmin()">⚙️ GESTÃO</button>
     
-    <div id="secao-principal">
+    <div id="secao-usuario">
         <h2>📋 Frequência Telejur</h2>
 
         <label class="label-peq">MODO DE ENVIO:</label>
@@ -62,43 +69,35 @@
             <option value="individual">Ponto Individual (GPS)</option>
         </select>
 
-        <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
-
-        <div id="campos-individual" class="hidden">
-            <label class="label-peq">FUNCIONÁRIO:</label>
-            <select id="select-individual"></select>
-        </div>
-
         <div id="campos-geral">
             <div class="card-status">
                 <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
                 <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
-                <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+                <div class="status-box"><span id="count-faltajust">0</span><label>Justific.</label></div>
                 <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
             </div>
             <div id="corpo-lista"></div>
         </div>
-
-        <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
+        
+        <button class="enviar" onclick="enviarWhatsapp()">🚀 ENVIAR WHATSAPP</button>
     </div>
 
     <div id="admin-area" class="hidden">
-        <h3 style="color: var(--azul-admin); text-align: center; margin-top: 0;">Painel de Gestão</h3>
+        <h3 style="color: var(--azul-admin); text-align: center; margin-top: 0;">Gestão de Equipe</h3>
         
-        <label class="label-peq">CADASTRAR NOVO:</label>
-        <input type="text" id="novo-nome" placeholder="Nome do Colaborador">
-        <input type="password" id="senha-mestra" placeholder="Senha Administrativa">
-        <button onclick="addFunc()" style="width:100%; background:var(--azul-admin); color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">SALVAR NOVO</button>
+        <label class="label-peq">NOVO COLABORADOR:</label>
+        <input type="text" id="novo-nome" placeholder="Nome Completo">
+        <input type="password" id="senha-mestra" placeholder="Senha do Sistema">
+        <button onclick="addFunc()" style="width:100%; background:var(--azul-admin); color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">CADASTRAR</button>
         
-        <label class="label-peq" style="margin-top: 20px;">LISTA PARA EXCLUSÃO:</label>
+        <label class="label-peq" style="margin-top: 20px;">COLABORADORES ATUAIS:</label>
         <div id="lista-admin-corpo" style="max-height:250px; overflow-y:auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px; background: #fff;"></div>
         
-        <button class="btn-sair" onclick="sairAdmin()">🚪 Sair e Voltar</button>
+        <button class="btn-sair" onclick="sairAdmin()">🚪 SAIR DA GESTÃO</button>
     </div>
 </div>
 
 <script>
-    // Configuração da API (Substitua pela sua URL do App Script se necessário)
     const API_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
     let equipe = [];
 
@@ -107,19 +106,17 @@
             const res = await fetch(API_URL + "?acao=ler");
             equipe = await res.json();
             renderizar();
-        } catch (e) { console.error("Erro ao carregar dados."); }
+        } catch (e) { alert("Erro ao carregar lista."); }
     }
 
     function renderizar() {
-        const listaOperacional = document.getElementById('corpo-lista');
-        const selIndividual = document.getElementById('select-individual');
-        const listaGerencia = document.getElementById('lista-admin-corpo');
-        
-        listaOperacional.innerHTML = ""; selIndividual.innerHTML = ""; listaGerencia.innerHTML = "";
+        const listaU = document.getElementById('corpo-lista');
+        const listaA = document.getElementById('lista-admin-corpo');
+        listaU.innerHTML = ""; listaA.innerHTML = "";
 
         equipe.forEach((nome, i) => {
-            // Interface Usuário
-            listaOperacional.innerHTML += `
+            // Lista do Usuário (Com Grid Rígido)
+            listaU.innerHTML += `
                 <div class="item-lista">
                     <div class="item-info">
                         <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
@@ -133,10 +130,9 @@
                         <option value="Falta justificada">Falta Just.</option>
                     </select>
                 </div>`;
-            selIndividual.innerHTML += `<option value="${nome}">${nome}</option>`;
 
-            // Interface Gestão (Apenas Nome e Excluir)
-            listaGerencia.innerHTML += `
+            // Lista da Gestão (Simples)
+            listaA.innerHTML += `
                 <div class="admin-item">
                     <span>${nome}</span>
                     <button onclick="delFunc('${nome}')" style="border:none; background:none; color:red; cursor:pointer; font-weight:bold;">EXCLUIR</button>
@@ -146,35 +142,34 @@
     }
 
     function abrirPainelAdmin() {
-        if(prompt("Senha de acesso:") === "123") {
-            document.getElementById('secao-principal').classList.add('hidden');
+        if(prompt("Senha:") === "123") {
+            document.getElementById('secao-usuario').classList.add('hidden');
             document.getElementById('admin-area').classList.remove('hidden');
             document.getElementById('btn-admin-trigger').classList.add('hidden');
         }
     }
 
     function sairAdmin() {
-        document.getElementById('secao-principal').classList.remove('hidden');
+        document.getElementById('secao-usuario').classList.remove('hidden');
         document.getElementById('admin-area').classList.add('hidden');
         document.getElementById('btn-admin-trigger').classList.remove('hidden');
     }
 
     async function addFunc() {
-        const nome = document.getElementById('novo-nome').value;
-        const senha = document.getElementById('senha-mestra').value;
-        if(!nome || !senha) return alert("Preencha todos os campos!");
-        
-        await fetch(`${API_URL}?acao=add&nome=${encodeURIComponent(nome)}&senha=${senha}`);
+        const n = document.getElementById('novo-nome').value;
+        const s = document.getElementById('senha-mestra').value;
+        if(!n || !s) return alert("Preencha os campos!");
+        await fetch(`${API_URL}?acao=add&nome=${encodeURIComponent(n)}&senha=${s}`);
         document.getElementById('novo-nome').value = "";
-        await carregarDados(); // Atualiza sem sair da tela
-        alert("Colaborador cadastrado!");
+        await carregarDados();
+        alert("Cadastrado com sucesso!");
     }
 
     async function delFunc(nome) {
-        const senha = document.getElementById('senha-mestra').value;
-        if(!senha) return alert("Digite a senha administrativa no campo acima!");
-        if(confirm(`Tem certeza que deseja remover ${nome}?`)) {
-            await fetch(`${API_URL}?acao=deletar&nome=${encodeURIComponent(nome)}&senha=${senha}`);
+        const s = document.getElementById('senha-mestra').value;
+        if(!s) return alert("Digite a senha no campo acima para autorizar!");
+        if(confirm(`Remover ${nome}?`)) {
+            await fetch(`${API_URL}?acao=deletar&nome=${encodeURIComponent(nome)}&senha=${s}`);
             await carregarDados();
         }
     }
@@ -186,9 +181,10 @@
             const sel = document.getElementById(`motivo-${i}`);
             if (cb && !cb.checked) {
                 sel.classList.remove('hidden');
-                if (sel.value === "Férias") f++;
-                else if (sel.value === "Atestado") a++;
-                else if (sel.value === "Falta justificada") j++;
+                const v = sel.value;
+                if (v === "Férias") f++;
+                else if (v === "Atestado") a++;
+                else if (v === "Falta justificada") j++;
                 else s++;
             } else if(sel) { sel.classList.add('hidden'); }
         });
@@ -196,13 +192,6 @@
         document.getElementById('count-atestado').innerText = a;
         document.getElementById('count-faltajust').innerText = j;
         document.getElementById('count-faltas').innerText = s;
-    }
-
-    function alternarModo() {
-        const m = document.getElementById('modo-envio').value;
-        document.getElementById('campos-geral').classList.toggle('hidden', m === 'individual');
-        document.getElementById('campos-individual').classList.toggle('hidden', m === 'geral');
-        document.getElementById('status-gps').classList.toggle('hidden', m === 'geral');
     }
 
     function enviarWhatsapp() {
