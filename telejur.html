@@ -3,60 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequência Telejur - Oficial</title>
+    <title>Frequência Telejur</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; }
+        /* RESET E ESTRUTURA BASE */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; margin: 0; }
+        .container { width: 100%; max-width: 420px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; }
         
-        /* TÍTULO COM ÍCONE */
-        .header-title { display: flex; align-items: center; justify-content: center; gap: 10px; color: #075E54; margin-bottom: 20px; font-size: 22px; font-weight: bold; }
+        /* CABEÇALHO */
+        .header-title { display: flex; align-items: center; justify-content: center; gap: 10px; color: #075E54; margin-bottom: 25px; font-size: 20px; font-weight: bold; border: 2px solid #075E54; padding: 10px; border-radius: 12px; text-align: center; }
+        .btn-admin-top { position: absolute; top: 15px; right: 15px; background: #007bff; color: white; border: none; padding: 6px 14px; border-radius: 50px; font-size: 11px; cursor: pointer; font-weight: bold; }
 
-        /* BOTÃO ADMIN/GESTÃO */
-        .btn-admin-top { position: absolute; top: 15px; right: 15px; background: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 50px; font-size: 10px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 4px; }
-
-        /* CARTÃO DE STATUS (CONTADORES) */
-        .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
-        .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
-        .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
-        .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
-
-        /* LISTA DE FUNCIONÁRIOS - CORRIGIDO */
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; gap: 10px; width: 100%; }
-        .item-info { display: flex; align-items: center; gap: 15px; flex: 1; } /* Aumentado o gap para o checkbox */
-        .item-info input { transform: scale(1.4); cursor: pointer; flex-shrink: 0; margin-left: 5px; }
-        .nome-func { font-size: 15px; color: #333; font-weight: 500; }
+        /* FORMULÁRIO */
+        label.label-peq { font-size: 11px; font-weight: bold; color: #075E54; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        select, input[type="text"] { width: 100%; font-size: 15px; border-radius: 10px; border: 1px solid #ccc; padding: 12px; background: #fff; margin-bottom: 15px; box-sizing: border-box; outline: none; }
         
-        select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 12px; background: #fff; margin-bottom: 15px; box-sizing: border-box; }
-        .hidden { display: none !important; }
-
         /* CAMPO DE LOCALIZAÇÃO - CORREÇÃO DE ALINHAMENTO */
         .btn-gps { 
-            background-color: #d9534f; 
+            background-color: #6c757d; 
             color: white; 
-            border: none; 
             padding: 15px; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             font-weight: bold; 
             margin: 10px 0 20px 0; 
-            width: 100%; /* Ocupa toda a largura do container */
-            font-size: 15px; 
+            width: 100%; 
+            font-size: 14px; 
             text-align: center; 
-            box-sizing: border-box; /* Crucial para não estourar a borda */
+            box-sizing: border-box; /* IMPEDE O DESALINHAMENTO */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             gap: 4px;
+            transition: 0.3s;
         }
+        .btn-gps.fora { background-color: #d9534f; }
+        .btn-gps.dentro { background-color: #075E54; }
         .btn-gps small { font-weight: normal; opacity: 0.9; font-size: 12px; }
-        
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.3s; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 8px; text-transform: uppercase; }
 
-        /* SEÇÃO GESTÃO */
-        #secao-gestao { border: 2px dashed #007bff; padding: 15px; border-radius: 10px; background: #f9f9f9; margin-top: 10px; }
-        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; background: white; margin-bottom: 5px; border-radius: 5px; }
-        .btn-excluir { color: #d9534f; border: none; background: none; cursor: pointer; font-size: 18px; padding: 0 10px; }
+        /* LISTA DE PRESENÇA */
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; width: 100%; box-sizing: border-box; }
+        .item-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .item-info input { transform: scale(1.4); cursor: pointer; margin-left: 5px; }
+        .nome-func { font-size: 15px; color: #333; font-weight: 500; }
+        
+        /* BOTÕES */
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 18px; font-size: 16px; border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 10px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
+        .hidden { display: none !important; }
+
+        /* GESTÃO */
+        #secao-gestao { border: 2px dashed #007bff; padding: 15px; border-radius: 15px; background: #f8fbff; margin-top: 15px; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #ddd; background: white; margin-bottom: 5px; border-radius: 8px; font-size: 14px; }
+        .btn-del { color: #d9534f; cursor: pointer; font-size: 18px; font-weight: bold; border: none; background: none; }
     </style>
 </head>
 <body>
@@ -65,115 +62,132 @@
     <button class="btn-admin-top" onclick="loginGestao()">⚙️ GESTÃO</button>
 
     <div id="interface-usuario">
-        <div class="header-title">📋 Frequência Telejur</div>
+        <div class="header-title">📋 FREQUÊNCIA TELEJUR</div>
 
         <label class="label-peq">Modo de Envio:</label>
         <select id="modo-envio" onchange="alternarModo()">
             <option value="geral">Lista Geral (Equipe)</option>
-            <option value="individual">Formulário Individual (Validar Local)</option>
+            <option value="individual">Individual (Validar Local)</option>
         </select>
 
-        <div id="status-gps" class="btn-gps hidden">
-            <span>⌛ Localizando...</span>
-        </div>
+        <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
 
         <div id="campos-individual" class="hidden">
-            <label class="label-peq">Funcionário:</label>
+            <label class="label-peq">Selecionar Funcionário:</label>
             <select id="select-individual"></select>
         </div>
 
         <div id="campos-geral">
-            <div class="card-status">
-                <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
-                <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
-                <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
-                <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
-            </div>
-            <div id="corpo-lista"></div>
+            <label class="label-peq">Lista de Presença:</label>
+            <div id="corpo-lista">Carregando equipe da planilha...</div>
         </div>
 
         <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
     </div>
 
     <div id="secao-gestao" class="hidden">
-        <h3 style="color: #007bff; text-align: center;">Painel de Gestão</h3>
+        <h3 style="color: #007bff; text-align: center; margin-top: 0;">Gestão de Equipe</h3>
+        
         <label class="label-peq">Novo Colaborador:</label>
-        <input type="text" id="novo-colaborador" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; margin-bottom:10px; box-sizing:border-box;" placeholder="Nome completo...">
-        <button onclick="cadastrarColaborador()" style="width:100%; background:#007bff; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">CADASTRAR</button>
+        <input type="text" id="novo-nome" placeholder="Nome completo...">
+        <button onclick="addFuncionario()" style="width:100%; background:#007bff; color:white; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer;">CADASTRAR</button>
         
-        <label class="label-peq" style="margin-top: 20px;">Lista para Exclusão:</label>
-        <div id="lista-gestao-nomes" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 5px;"></div>
+        <label class="label-peq" style="margin-top: 20px;">Remover Colaborador:</label>
+        <div id="lista-admin" style="max-height: 200px; overflow-y: auto;"></div>
         
-        <button onclick="sairGestao()" style="width:100%; background:#6c757d; color:white; border:none; padding:12px; border-radius:8px; margin-top:15px; font-weight:bold; cursor:pointer;">🚪 SAIR</button>
+        <button onclick="sairGestao()" style="width:100%; background:#6c757d; color:white; border:none; padding:12px; border-radius:10px; margin-top:10px; cursor:pointer; font-weight:bold;">VOLTAR</button>
     </div>
 </div>
 
 <script>
-    // Se a planilha estiver conectada, esses nomes devem ser carregados dinamicamente
-    let equipe = ["Adriano Nascimento", "Cezar Prado", "Deivison Aleidson", "Edenildo Rodrigues", "Francivaldo Costa", "Joelcinei Guimarães", "Jean Soares", "Lucas Santos", "Matheus Costa", "Welyton Pereira", "Ruan Barros", "Rafael Gonçalves"];
+    const URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
+    let equipe = [];
+    let dadosLoc = { hora: "", status: "FORA DA PLANTA" };
 
-    function carregarLista() {
+    // --- COMUNICAÇÃO COM GOOGLE (JSONP) ---
+    function chamadaPlanilha(params, callbackFn) {
+        const idCallback = 'jsonp_' + Math.round(Math.random() * 1000000);
+        window[idCallback] = (data) => {
+            callbackFn(data);
+            delete window[idCallback];
+            document.getElementById(idCallback).remove();
+        };
+        const script = document.createElement('script');
+        script.id = idCallback;
+        script.src = `${URL_GOOGLE}?${params}&callback=${idCallback}`;
+        document.body.appendChild(script);
+    }
+
+    function atualizarDados() {
+        chamadaPlanilha("acao=ler", (nomes) => {
+            equipe = Array.isArray(nomes) ? nomes : [];
+            renderizarListas();
+        });
+    }
+
+    function renderizarListas() {
         const listaDiv = document.getElementById('corpo-lista');
         const selInd = document.getElementById('select-individual');
-        const listaGestao = document.getElementById('lista-gestao-nomes');
-        listaDiv.innerHTML = ""; selInd.innerHTML = ""; listaGestao.innerHTML = "";
+        const listaAdmin = document.getElementById('lista-admin');
         
-        equipe.sort().forEach((nome, i) => {
+        listaDiv.innerHTML = ""; selInd.innerHTML = ""; listaAdmin.innerHTML = "";
+
+        if (equipe.length === 0) {
+            listaDiv.innerHTML = "<p style='text-align:center; font-size:12px; color:gray;'>Nenhum funcionário encontrado.</p>";
+            return;
+        }
+
+        equipe.forEach((nome, i) => {
+            // Lista de Presença
             listaDiv.innerHTML += `
                 <div class="item-lista">
                     <div class="item-info">
-                        <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
+                        <input type="checkbox" id="check-${i}" checked>
                         <span class="nome-func">${nome}</span>
                     </div>
-                    <select id="motivo-${i}" class="hidden" style="width: auto; margin-bottom:0; padding:5px;" onchange="monitorar()">
-                        <option value="Falta sem justificativa">Falta</option>
-                        <option value="Atestado">Atestado</option>
-                        <option value="Férias">Férias</option>
-                        <option value="Em viagem">Viagem</option>
-                        <option value="Falta justificada">Justificada</option>
-                    </select>
                 </div>`;
+            
+            // Select Individual
             selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
-            listaGestao.innerHTML += `
+            
+            // Lista Admin
+            listaAdmin.innerHTML += `
                 <div class="admin-item">
                     <span>${nome}</span>
-                    <button class="btn-excluir" onclick="excluirColaborador('${nome}', ${i})">🗑️</button>
+                    <button class="btn-del" onclick="deletarFuncionario('${nome}')">🗑️</button>
                 </div>`;
         });
-        monitorar();
     }
 
-    function cadastrarColaborador() {
-        const input = document.getElementById('novo-colaborador');
-        const nome = input.value.trim();
-        if(nome) {
-            equipe.push(nome);
-            input.value = "";
-            carregarLista();
-            // Integração com Planilha (Se rodando via Google Web App)
-            if (typeof google !== 'undefined') {
-                google.script.run.cadastrarNoSheet(nome);
-            }
-            alert("Cadastrado com sucesso!");
-        }
+    // --- AÇÕES GESTÃO ---
+    function addFuncionario() {
+        const nome = document.getElementById('novo-nome').value.trim();
+        if (!nome) return;
+        const senha = prompt("Senha Admin:");
+        chamadaPlanilha(`acao=add&nome=${encodeURIComponent(nome)}&senha=${senha}`, (res) => {
+            if (res === "OK") {
+                alert("Adicionado com sucesso!");
+                document.getElementById('novo-nome').value = "";
+                atualizarDados();
+            } else { alert("Erro: " + res); }
+        });
     }
 
-    function excluirColaborador(nome, index) {
-        if(confirm("Deseja excluir " + nome + "?")) {
-            equipe.splice(index, 1);
-            carregarLista();
-            if (typeof google !== 'undefined') {
-                google.script.run.excluirNoSheet(nome);
-            }
-        }
+    function deletarFuncionario(nome) {
+        if (!confirm("Excluir " + nome + "?")) return;
+        const senha = prompt("Senha Admin:");
+        chamadaPlanilha(`acao=deletar&nome=${encodeURIComponent(nome)}&senha=${senha}`, (res) => {
+            if (res === "OK") {
+                alert("Removido com sucesso!");
+                atualizarDados();
+            } else { alert("Erro: " + res); }
+        });
     }
 
-    // --- FUNÇÕES DE INTERFACE E GPS ---
+    // --- INTERFACE E GPS ---
     function loginGestao() {
-        if(prompt("Senha:") === "123") {
-            document.getElementById('interface-usuario').classList.add('hidden');
-            document.getElementById('secao-gestao').classList.remove('hidden');
-        }
+        document.getElementById('interface-usuario').classList.add('hidden');
+        document.getElementById('secao-gestao').classList.remove('hidden');
     }
 
     function sairGestao() {
@@ -183,44 +197,48 @@
 
     function alternarModo() {
         const modo = document.getElementById('modo-envio').value;
-        document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
-        document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
-        if (modo === 'individual') {
-            document.getElementById('status-gps').classList.remove('hidden');
-            obterGps();
-        } else {
-            document.getElementById('status-gps').classList.add('hidden');
-        }
+        const ind = modo === 'individual';
+        document.getElementById('campos-geral').classList.toggle('hidden', ind);
+        document.getElementById('campos-individual').classList.toggle('hidden', !ind);
+        document.getElementById('status-gps').classList.toggle('hidden', !ind);
+        if (ind) obterGps();
     }
 
     function obterGps() {
         const statusGps = document.getElementById('status-gps');
-        if (!navigator.geolocation) return;
+        statusGps.innerHTML = "⌛ Localizando...";
+        statusGps.className = "btn-gps";
+
         navigator.geolocation.getCurrentPosition((pos) => {
-            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            statusGps.innerHTML = `<span>🛑 FORA DA PLANTA - ${hora}</span><small>Via identificada</small>`;
-            statusGps.style.backgroundColor = "#d9534f";
-        });
+            const hora = new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+            dadosLoc.hora = hora;
+            // Simulação simples de localização para o exemplo
+            statusGps.innerHTML = `<span>🛑 FORA DA PLANTA - ${hora}</span><small>Via Identificada</small>`;
+            statusGps.classList.add('fora');
+        }, () => {
+            statusGps.innerHTML = "❌ GPS Desativado";
+        }, { enableHighAccuracy: true });
     }
 
-    function monitorar() {
-        let f=0, a=0, j=0, s=0;
-        equipe.forEach((_, i) => {
-            const cb = document.getElementById(`check-${i}`);
-            const sel = document.getElementById(`motivo-${i}`);
-            if (cb && !cb.checked) {
-                sel.classList.remove('hidden');
-                const val = sel.value;
-                if (val === "Férias") f++; else if (val === "Atestado") a++; else if (val === "Falta justificada") j++; else s++;
-            } else if (sel) { sel.classList.add('hidden'); }
-        });
-        document.getElementById('count-ferias').innerText = f;
-        document.getElementById('count-atestado').innerText = a;
-        document.getElementById('count-faltajust').innerText = j;
-        document.getElementById('count-faltas').innerText = s;
+    function enviarWhatsapp() {
+        const dataStr = new Date().toLocaleDateString('pt-BR');
+        let msg = `✅ *TELEJUR JURUTI - FREQUÊNCIA*\n📅 Data: ${dataStr}\n\n`;
+
+        if (document.getElementById('modo-envio').value === 'geral') {
+            msg += "*EFETIVO NA PLANTA:*\n";
+            equipe.forEach((nome, i) => {
+                if (document.getElementById(`check-${i}`).checked) msg += `• ${nome}\n`;
+            });
+        } else {
+            const nomeInd = document.getElementById('select-individual').value;
+            msg += `*INDIVIDUAL*\n👤 Funcionário: _${nomeInd}_\n⏰ Hora: ${dadosLoc.hora}\n📊 Status: ${dadosLoc.status}\n📍 Localização Validada via GPS.`;
+        }
+
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
 
-    window.onload = carregarLista;
+    window.onload = atualizarDados;
 </script>
+
 </body>
 </html>
