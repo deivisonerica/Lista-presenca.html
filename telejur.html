@@ -8,11 +8,12 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; margin: 0; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
         
-        /* Título Azul com Bordas */
-        h2 { color: #0056b3; text-align: center; margin-bottom: 20px; font-size: 24px; border: 2px solid #0056b3; padding: 10px; border-radius: 10px; background-color: #f8fbff; text-transform: uppercase; letter-spacing: 1px; }
+        /* Título Azul Estilizado */
+        h2 { color: #0056b3; text-align: center; margin-bottom: 20px; font-size: 22px; border: 2px solid #0056b3; padding: 12px; border-radius: 12px; background-color: #f8fbff; text-transform: uppercase; }
         
         #loading { text-align: center; padding: 20px; color: #667; font-weight: bold; }
-        .card-status { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px; }
+        
+        .card-status { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 15px; }
         .status-box { background: #f8f9fa; padding: 8px 2px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
         .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
         .status-box label { font-size: 8px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
@@ -22,27 +23,27 @@
         .item-info input { transform: scale(1.3); cursor: pointer; }
         .nome-func { font-size: 14px; color: #333; }
         
-        select, input[type="text"], input[type="password"] { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 12px; background: #fff; margin-bottom: 10px; box-sizing: border-box; }
+        select, input { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 12px; background: #fff; margin-bottom: 10px; box-sizing: border-box; }
         .hidden { display: none; }
 
         /* GPS Centralizado */
-        .btn-gps { display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; min-height: 60px; background-color: #6c757d; }
+        .btn-gps { display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; min-height: 60px; background-color: #6c757d; }
         
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 18px; font-size: 16px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); text-transform: uppercase; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 18px; font-size: 16px; border-radius: 12px; cursor: pointer; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 12px rgba(37,211,102,0.3); text-transform: uppercase; }
         
         /* Área Admin */
         #admin-area { border: 2px dashed #0056b3; padding: 15px; margin-top: 20px; border-radius: 10px; background: #f0f7ff; }
-        .btn-admin-toggle { background: none; border: none; color: #6c757d; font-size: 10px; cursor: pointer; float: right; }
-        .lista-admin { margin-top: 10px; max-height: 150px; overflow-y: auto; background: white; border-radius: 5px; border: 1px solid #ddd; }
-        .item-admin { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 12px; }
-        .btn-del { color: #d9534f; cursor: pointer; font-weight: bold; border: none; background: none; }
+        .btn-admin-top { background: #0056b3; border: none; color: white; font-size: 11px; padding: 5px 12px; border-radius: 20px; cursor: pointer; float: right; font-weight: bold; text-transform: uppercase; }
+        .lista-admin { margin-top: 10px; max-height: 150px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 8px; }
+        .item-admin { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+        .btn-del { color: #d9534f; cursor: pointer; border: none; background: none; font-size: 16px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <button class="btn-admin-toggle" onclick="abrirPainelAdmin()">⚙️ CONFIG</button>
-    <div id="loading">⌛ Sincronizando dados...</div>
+    <button class="btn-admin-top" onclick="abrirPainelAdmin()">⚙️ Admin</button>
+    <div id="loading">⌛ Sincronizando dados Telejur...</div>
 
     <div id="conteudo" class="hidden">
         <h2>Frequência Telejur</h2>
@@ -71,10 +72,10 @@
         <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
 
         <div id="admin-area" class="hidden">
-            <label style="font-size:12px; font-weight:bold; color:#0056b3;">GERENCIAR EQUIPE</label>
-            <input type="text" id="novo-nome" placeholder="Nome completo">
+            <label style="font-size:12px; font-weight:bold; color:#0056b3; display:block; margin-bottom:8px;">GERENCIAR EQUIPE</label>
+            <input type="text" id="novo-nome" placeholder="Nome Usuário">
             <input type="password" id="senha-admin" placeholder="Senha Admin">
-            <button onclick="addFunc()" style="width:100%; background:#0056b3; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">➕ ADICIONAR</button>
+            <button onclick="addFunc()" style="width:100%; background:#0056b3; color:white; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">➕ ADICIONAR</button>
             
             <div class="lista-admin" id="lista-admin-corpo"></div>
         </div>
@@ -145,19 +146,19 @@
     async function addFunc() {
         const nome = document.getElementById('novo-nome').value.trim();
         const senha = document.getElementById('senha-admin').value;
-        if(!nome || !senha) return alert("Preencha tudo!");
+        if(!nome || !senha) return alert("Preencha Nome e Senha!");
         const res = await fetch(`${API_URL}?acao=add&nome=${encodeURIComponent(nome)}&senha=${senha}`);
         const txt = await res.text();
-        if(txt === "OK") location.reload(); else alert(txt);
+        if(txt === "OK") location.reload(); else alert("Erro: " + txt);
     }
 
     async function delFunc(nome) {
         const senha = document.getElementById('senha-admin').value;
-        if(!senha) return alert("Digite a senha admin para excluir!");
-        if(!confirm(`Excluir ${nome}?`)) return;
+        if(!senha) return alert("Digite a senha no campo acima para excluir!");
+        if(!confirm(`Excluir ${nome} da equipe?`)) return;
         const res = await fetch(`${API_URL}?acao=deletar&nome=${encodeURIComponent(nome)}&senha=${senha}`);
         const txt = await res.text();
-        if(txt === "OK") location.reload(); else alert(txt);
+        if(txt === "OK") location.reload(); else alert("Erro: " + txt);
     }
 
     function obterGps() {
@@ -188,7 +189,13 @@
         const m = document.getElementById('modo-envio').value;
         document.getElementById('campos-geral').classList.toggle('hidden', m === 'individual');
         document.getElementById('campos-individual').classList.toggle('hidden', m === 'geral');
-        if (m === 'individual') obterGps();
+        
+        const gpsBox = document.getElementById('status-gps');
+        if (m === 'individual') {
+            obterGps();
+        } else {
+            gpsBox.classList.add('hidden');
+        }
     }
 
     function monitorar() {
@@ -208,8 +215,12 @@
     }
 
     function abrirPainelAdmin() {
-        const s = prompt("Senha:");
-        if(s === "123") document.getElementById('admin-area').classList.toggle('hidden');
+        const s = prompt("Digite a senha Admin:");
+        if(s === "123") {
+            document.getElementById('admin-area').classList.toggle('hidden');
+        } else if (s !== null) {
+            alert("Acesso Negado.");
+        }
     }
 
     function enviarWhatsapp() {
