@@ -22,6 +22,9 @@
         .nome-func { font-size: 16px; font-weight: 600; color: #2d3748; }
         select, input[type="text"] { width: 100%; font-size: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
         
+        /* Estilo específico para o novo seletor de tipo */
+        .select-tipo { border: 2px solid var(--primary); background-color: #f0f7ff; font-weight: bold; color: var(--primary); }
+
         .btn-admin-top { display: inline-block; background: rgba(0, 123, 255, 0.1); color: var(--primary); border: 1px solid rgba(0, 123, 255, 0.2); padding: 6px 12px; border-radius: 10px; font-size: 11px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
         .hidden { display: none !important; }
         
@@ -67,6 +70,12 @@
 
         <div id="campos-individual" class="hidden">
             <select id="select-individual"></select>
+            <select id="tipo-registro-individual" class="select-tipo">
+                <option value="Registro de Chegada">🏁 Registro de Chegada</option>
+                <option value="Início Almoço">🍴 Início Almoço</option>
+                <option value="Saída Almoço">🍱 Saída Almoço</option>
+                <option value="Final de Turno">🚪 Final de Turno</option>
+            </select>
         </div>
 
         <div id="campos-geral">
@@ -187,7 +196,8 @@
 
         if (modo === "individual") {
             nomeFinal = document.getElementById('select-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeFinal}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.horaEnvio}\n📍 *Mapa:* ${dadosLoc.link}`;
+            const tipoReg = document.getElementById('tipo-registro-individual').value; // PEGA O VALOR DA NOVA CAIXA
+            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeFinal}\n📝 *Tipo:* ${tipoReg}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.horaEnvio}\n📍 *Mapa:* ${dadosLoc.link}`;
         } else {
             nomeFinal = "Equipe";
             let p = [], f = [];
