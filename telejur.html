@@ -11,13 +11,16 @@
         .header-area { text-align: center; margin-bottom: 20px; }
         .titulo-principal { color: var(--primary); font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0; }
         .sub-titulo { color: var(--primary); font-size: 15px; font-weight: 600; margin: 5px 0 10px 0; }
-        .btn-admin-top { display: inline-block; background: rgba(0, 123, 255, 0.1); color: var(--primary); border: 1px solid rgba(0, 123, 255, 0.2); padding: 6px 12px; border-radius: 10px; font-size: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #f8fafc; }
-        .nome-func { font-size: 14px; font-weight: 500; }
-        select, input[type="text"] { width: 100%; font-size: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; }
+        
+        /* FONTE AUMENTADA EM UM NÍVEL (16px) */
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 14px 10px; border-bottom: 1px solid #f8fafc; }
+        .nome-func { font-size: 16px; font-weight: 600; color: #2d3748; }
+        select, input[type="text"] { width: 100%; font-size: 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; }
+        
+        .btn-admin-top { display: inline-block; background: rgba(0, 123, 255, 0.1); color: var(--primary); border: 1px solid rgba(0, 123, 255, 0.2); padding: 6px 12px; border-radius: 10px; font-size: 11px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
         .hidden { display: none !important; }
         .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; box-sizing: border-box; min-height: 90px; }
-        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); }
+        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); }
         
         #tela-sucesso { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 100; padding: 30px; box-sizing: border-box; }
         .progress-bar { width: 150px; height: 4px; background: #eee; border-radius: 2px; margin-top: 15px; overflow: hidden; }
@@ -54,7 +57,7 @@
         </div>
 
         <div id="campos-geral">
-            <div id="corpo-lista" style="max-height: 300px; overflow-y: auto;">Carregando equipe...</div>
+            <div id="corpo-lista" style="max-height: 300px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 12px;">Carregando equipe...</div>
         </div>
 
         <button id="btn-principal" class="enviar" onclick="processarEnvio()" style="margin-top: 20px;">🚀 Enviar lista de frequencia</button>
@@ -66,10 +69,9 @@
     let equipe = [];
     let dadosLoc = { link: "", unidadeMsg: "FORA DA PLANTA", hora: "" };
 
-    // Coordenadas Alcoa Juruti
     const locais = {
-        porto: { lat: -2.1677, lon: -56.1017, nome: "ALCOA PORTO" },
-        beneficiamento: { lat: -2.3166, lon: -56.2415, nome: "ALCOA BENEFICIAMENTO" }
+        porto: { lat: -2.1677, lon: -56.1017 },
+        beneficiamento: { lat: -2.3166, lon: -56.2415 }
     };
 
     function emitirBip() {
@@ -84,14 +86,9 @@
         } catch(e) {}
     }
 
-    // Cálculo de distância para definir se está na planta
     function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371e3; 
-        const φ1 = lat1 * Math.PI/180;
-        const φ2 = lat2 * Math.PI/180;
-        const Δφ = (lat2-lat1) * Math.PI/180;
-        const Δλ = (lon2-lon1) * Math.PI/180;
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const a = Math.sin(((lat2-lat1)*Math.PI/180)/2) * Math.sin(((lat2-lat1)*Math.PI/180)/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(((lon2-lon1)*Math.PI/180)/2) * Math.sin(((lon2-lon1)*Math.PI/180)/2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
@@ -101,24 +98,12 @@
             const lat = pos.coords.latitude; const lon = pos.coords.longitude;
             dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
-            
             const distPorto = calcularDistancia(lat, lon, locais.porto.lat, locais.porto.lon);
             const distBenef = calcularDistancia(lat, lon, locais.beneficiamento.lat, locais.beneficiamento.lon);
-
-            const statusGps = document.getElementById('status-gps');
-            if (distPorto < 1000) {
-                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA PORTO";
-                statusGps.innerHTML = `<span style="color:#2c7a7b; font-weight:bold;">✅ ALCOA PORTO</span><small>Localização validada</small>`;
-                statusGps.style.backgroundColor = "#e6fffa";
-            } else if (distBenef < 2500) {
-                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA BENEFICIAMENTO";
-                statusGps.innerHTML = `<span style="color:#2c7a7b; font-weight:bold;">✅ ALCOA BENEFICIAMENTO</span><small>Localização validada</small>`;
-                statusGps.style.backgroundColor = "#e6fffa";
-            } else {
-                dadosLoc.unidadeMsg = "FORA DA PLANTA";
-                statusGps.innerHTML = `<span style="color:#c53030; font-weight:bold;">🛑 FORA DA PLANTA</span><small>Distante das unidades</small>`;
-                statusGps.style.backgroundColor = "#fff5f5";
-            }
+            const st = document.getElementById('status-gps');
+            if (distPorto < 1000) { dadosLoc.unidadeMsg = "PRESENTE NA ALCOA PORTO"; st.innerHTML = `<b>✅ ALCOA PORTO</b>`; st.style.backgroundColor = "#e6fffa"; }
+            else if (distBenef < 2500) { dadosLoc.unidadeMsg = "PRESENTE NA ALCOA BENEFICIAMENTO"; st.innerHTML = `<b>✅ ALCOA BENEFICIAMENTO</b>`; st.style.backgroundColor = "#e6fffa"; }
+            else { dadosLoc.unidadeMsg = "FORA DA PLANTA"; st.innerHTML = `<b>🛑 FORA DA PLANTA</b>`; st.style.backgroundColor = "#fff5f5"; }
         }, null, { enableHighAccuracy: true });
     }
 
@@ -127,23 +112,26 @@
         const modo = document.getElementById('modo-envio').value;
         const dataH = new Date().toLocaleDateString('pt-BR');
         let msg = "";
-        let nomeFunc = "";
+        let nomeFinal = "";
 
         if (modo === "individual") {
-            nomeFunc = document.getElementById('select-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeFunc}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.hora}\n📍 *Mapa:* ${dadosLoc.link}`;
+            nomeFinal = document.getElementById('select-individual').value;
+            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeFinal}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.hora}\n📍 *Mapa:* ${dadosLoc.link}`;
         } else {
-            nomeFunc = "Equipe";
+            nomeFinal = "Equipe";
             let p = [], f = [];
             equipe.forEach((n, i) => {
                 const cb = document.getElementById(`check-${i}`);
                 if (cb.checked) p.push(`_${n}_`);
                 else f.push(`_${n}_ (${document.getElementById(`motivo-${i}`).value})`);
             });
-            msg = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n✅ *Presente na Planta:* ${p.length}\n${p.join('\n')}\n\n❌ *Ausentes:* ${f.length}\n${f.join('\n')}`;
+            
+            // FORMATAÇÃO WHATSAPP COM TRACEJADO
+            const divisor = "\n- - - - - - - - - - - - - - - - - -\n";
+            msg = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n✅ *Presente na Planta:* ${p.length}\n${p.join(divisor)}\n\n❌ *Ausentes:* ${f.length}\n${f.join(divisor)}`;
         }
 
-        document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeFunc}`;
+        document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeFinal}`;
         document.getElementById('tela-sucesso').classList.remove('hidden');
         setTimeout(() => { document.getElementById('fill').style.width = "100%"; }, 50);
 
@@ -181,8 +169,8 @@
                     <div class="item-lista">
                         <span class="nome-func">${nome}</span>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:20px; height:20px;">
-                            <select id="motivo-${i}" class="hidden" style="width:145px; margin:0; padding:4px; font-size:12px;">
+                            <input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:24px; height:24px;">
+                            <select id="motivo-${i}" class="hidden" style="width:160px; margin:0; padding:6px; font-size:13px;">
                                 <option value="Falta não justificada">Falta não justificada</option>
                                 <option value="Falta justificada">Falta justificada</option>
                                 <option value="Atestado">Atestado</option>
@@ -210,7 +198,7 @@
         atualizarDados();
     }
 
-    function abrirGestao() { if(prompt("Senha:")==="123") { /* Admin via Script */ } }
+    function abrirGestao() { if(prompt("Senha:")==="123") { /* Admin logic */ } }
     window.onload = atualizarDados;
 </script>
 </body>
