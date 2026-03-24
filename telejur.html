@@ -13,8 +13,7 @@
         .titulo-principal { color: var(--primary); font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0; }
         .sub-titulo { color: var(--primary); font-size: 15px; font-weight: 600; margin: 5px 0 10px 0; }
         
-        /* PAINEL GPS TEMPO REAL */
-        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px; border-radius: 16px; margin: 0 auto 15px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 90%; min-height: 70px; box-sizing: border-box; transition: all 0.3s ease; }
+        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px; border-radius: 16px; margin: 0 auto 15px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 90%; min-height: 70px; box-sizing: border-box; }
         .btn-gps b { font-size: 14px; display: block; margin-bottom: 2px; }
         .btn-gps span { font-size: 16px; font-weight: 800; color: #2d3748; font-family: monospace; }
         .btn-gps small { font-size: 10px; color: #718096; margin-top: 4px; display: block; }
@@ -80,9 +79,9 @@
     <div id="secao-gestao" class="hidden">
         <h3 style="text-align:center; color:var(--primary); margin-bottom:20px;">Painel Administrativo</h3>
         <input type="text" id="novo-nome" placeholder="Digite o nome completo...">
-        <button onclick="addFuncionario()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">+ ADICIONAR FUNCIONÁRIO</button>
+        <button onclick="addFuncionario()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">+ ADICIONAR FUNCIONÁRIO</button>
         <div id="lista-admin" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius:12px; border: 1px solid #eee; margin-top: 15px;"></div>
-        <button onclick="fecharGestao()" style="width:100%; background:#718096; color:white; border:none; padding:12px; border-radius:12px; margin-top:20px;">VOLTAR</button>
+        <button onclick="fecharGestao()" style="width:100%; background:#718096; color:white; border:none; padding:12px; border-radius:12px; margin-top:20px; font-weight:bold;">VOLTAR</button>
     </div>
 </div>
 
@@ -95,7 +94,6 @@
 
     const locais = { porto: { lat: -2.1677, lon: -56.1017 }, beneficiamento: { lat: -2.3166, lon: -56.2415 } };
 
-    // FUNÇÃO DO RELÓGIO (ATUALIZA A CADA SEGUNDO)
     function iniciarRelogio() {
         if (timerID) clearInterval(timerID);
         timerID = setInterval(() => {
@@ -104,8 +102,25 @@
             const d = agora.toLocaleDateString('pt-BR');
             document.getElementById('relogio-agora').innerText = h;
             document.getElementById('txt-data').innerText = d;
-            dadosLoc.horaEnvio = h; // Sempre pega a hora mais atual para o WhatsApp
+            dadosLoc.horaEnvio = h;
         }, 1000);
+    }
+
+    function iniciarRastreioGps() {
+        if (!navigator.geolocation) return;
+        if (watchID) navigator.geolocation.clearWatch(watchID);
+        watchID = navigator.geolocation.watchPosition((pos) => {
+            const lat = pos.coords.latitude; 
+            const lon = pos.coords.longitude;
+            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            const distPorto = calcularDistancia(lat, lon, locais.porto.lat, locais.porto.lon);
+            const distBenef = calcularDistancia(lat, lon, locais.beneficiamento.lat, locais.beneficiamento.lon);
+            const painel = document.getElementById('status-gps');
+            const txtLocal = document.getElementById('txt-local');
+            if (distPorto < 1000) { dadosLoc.unidadeMsg = "PRESENTE NA ALCOA PORTO"; txtLocal.innerHTML = "✅ ALCOA PORTO"; painel.style.backgroundColor = "#e6fffa"; }
+            else if (distBenef < 2500) { dadosLoc.unidadeMsg = "PRESENTE NA ALCOA BENEFICIAMENTO"; txtLocal.innerHTML = "✅ ALCOA BENEFICIAMENTO"; painel.style.backgroundColor = "#e6fffa"; }
+            else { dadosLoc.unidadeMsg = "FORA DA PLANTA"; txtLocal.innerHTML = "🛑 FORA DA PLANTA"; painel.style.backgroundColor = "#fff5f5"; }
+        }, null, { enableHighAccuracy: true });
     }
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
@@ -114,60 +129,43 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // MONITORAMENTO DE MOVIMENTO EM TEMPO REAL
-    function iniciarRastreioGps() {
-        if (!navigator.geolocation) return;
-        
-        if (watchID) navigator.geolocation.clearWatch(watchID);
-        
-        watchID = navigator.geolocation.watchPosition((pos) => {
-            const lat = pos.coords.latitude; 
-            const lon = pos.coords.longitude;
-            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
-            
-            const distPorto = calcularDistancia(lat, lon, locais.porto.lat, locais.porto.lon);
-            const distBenef = calcularDistancia(lat, lon, locais.beneficiamento.lat, locais.beneficiamento.lon);
-            
-            const painel = document.getElementById('status-gps');
-            const txtLocal = document.getElementById('txt-local');
-
-            if (distPorto < 1000) { 
-                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA PORTO"; 
-                txtLocal.innerHTML = "✅ ALCOA PORTO";
-                painel.style.backgroundColor = "#e6fffa"; 
-            } else if (distBenef < 2500) { 
-                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA BENEFICIAMENTO"; 
-                txtLocal.innerHTML = "✅ ALCOA BENEFICIAMENTO";
-                painel.style.backgroundColor = "#e6fffa"; 
-            } else { 
-                dadosLoc.unidadeMsg = "FORA DA PLANTA"; 
-                txtLocal.innerHTML = "🛑 FORA DA PLANTA";
-                painel.style.backgroundColor = "#fff5f5"; 
-            }
-        }, (err) => {
-            document.getElementById('txt-local').innerHTML = "⚠️ GPS Desativado";
-        }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+    function atualizarDados() {
+        chamadaAPI("acao=ler", (data) => {
+            equipe = Array.isArray(data) ? data : [];
+            const listaDiv = document.getElementById('corpo-lista');
+            const selInd = document.getElementById('select-individual');
+            const listaAdm = document.getElementById('lista-admin');
+            listaDiv.innerHTML = ""; selInd.innerHTML = ""; listaAdm.innerHTML = "";
+            equipe.forEach((nome, i) => {
+                listaDiv.innerHTML += `
+                    <div class="item-lista">
+                        <span class="nome-func">${nome}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:24px; height:24px;">
+                            <select id="motivo-${i}" class="hidden" style="width:160px; padding:6px; font-size:13px;">
+                                <option value="Falta não justificada">Falta não justificada</option>
+                                <option value="Falta justificada">Falta justificada</option>
+                                <option value="Atestado">Atestado</option>
+                                <option value="Férias">Férias</option>
+                                <option value="Treinamento Externo">Treinamento Externo</option>
+                            </select>
+                        </div>
+                    </div>`;
+                selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
+                listaAdm.innerHTML += `<div class="item-admin"><span><b>${nome}</b></span><button class="btn-del" onclick="deletarFuncionario('${nome}')">🗑️</button></div>`;
+            });
+        });
     }
 
     function alternarModo() {
         const modo = document.getElementById('modo-envio').value;
         const painelGps = document.getElementById('status-gps');
-        
         document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
         document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
-        
-        if (modo === 'individual') { 
-            painelGps.classList.remove('hidden'); 
-            iniciarRelogio();
-            iniciarRastreioGps();
-        } else { 
-            painelGps.classList.add('hidden');
-            if (watchID) navigator.geolocation.clearWatch(watchID);
-            if (timerID) clearInterval(timerID);
-        }
+        if (modo === 'individual') { painelGps.classList.remove('hidden'); iniciarRelogio(); iniciarRastreioGps(); }
+        else { painelGps.classList.add('hidden'); if (watchID) navigator.geolocation.clearWatch(watchID); if (timerID) clearInterval(timerID); }
     }
 
-    // Restante das funções (Bip, API, Envio) permanecem integradas...
     function emitirBip() {
         try {
             const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -220,39 +218,54 @@
         document.body.appendChild(s);
     }
 
-    function atualizarDados() {
-        chamadaAPI("acao=ler", (data) => {
-            equipe = Array.isArray(data) ? data : [];
-            const listaDiv = document.getElementById('corpo-lista');
-            const selInd = document.getElementById('select-individual');
-            const listaAdm = document.getElementById('lista-admin');
-            listaDiv.innerHTML = ""; selInd.innerHTML = ""; listaAdm.innerHTML = "";
-            equipe.forEach((nome, i) => {
-                listaDiv.innerHTML += `<div class="item-lista"><span class="nome-func">${nome}</span><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:24px; height:24px;"><select id="motivo-${i}" class="hidden" style="width:160px; padding:6px; font-size:13px;"><option value="Falta não justificada">Falta não justificada</option><option value="Falta justificada">Falta justificada</option><option value="Atestado">Atestado</option><option value="Férias">Férias</option></select></div></div>`;
-                selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
-                listaAdm.innerHTML += `<div class="item-admin"><span><b>${nome}</b></span><button class="btn-del" onclick="deletarFuncionario('${nome}')" title="Excluir">🗑️</button></div>`;
-            });
-        });
+    function abrirGestao() {
+        if(prompt("Senha:") === "123") {
+            document.getElementById('interface-usuario').classList.add('hidden');
+            document.getElementById('secao-gestao').classList.remove('hidden');
+        }
     }
 
-    function abrirGestao() { if(prompt("Senha:") === "123") { document.getElementById('interface-usuario').classList.add('hidden'); document.getElementById('secao-gestao').classList.remove('hidden'); } }
-    function fecharGestao() { document.getElementById('secao-gestao').classList.add('hidden'); document.getElementById('interface-usuario').classList.remove('hidden'); }
+    function fecharGestao() {
+        document.getElementById('secao-gestao').classList.add('hidden');
+        document.getElementById('interface-usuario').classList.remove('hidden');
+    }
+
     function addFuncionario() {
         const inputNome = document.getElementById('novo-nome');
         const nome = inputNome.value;
-        if(!nome) return alert("Digite o nome!");
-        chamadaAPI(`acao=add&nome=${encodeURIComponent(nome)}&senha=123`, () => { emitirBip(); alert(`${nome} cadastrado!`); inputNome.value = ""; atualizarDados(); });
+        if(!nome) return alert("Por favor, digite o nome!");
+        
+        chamadaAPI(`acao=add&nome=${encodeURIComponent(nome)}&senha=123`, () => {
+            emitirBip();
+            alert(`${nome} cadastrado com sucesso!`);
+            inputNome.value = "";
+            atualizarDados();
+        });
     }
+
     function deletarFuncionario(nome) {
-        if(confirm(`Remover ${nome}?`)) { chamadaAPI(`acao=deletar&nome=${encodeURIComponent(nome)}&senha=123`, () => { emitirBip(); alert(`${nome} removido!`); atualizarDados(); }); }
+        if(confirm(`Deseja realmente remover ${nome}?`)) {
+            chamadaAPI(`acao=deletar&nome=${encodeURIComponent(nome)}&senha=123`, () => {
+                emitirBip();
+                alert(`${nome} removido com sucesso!`);
+                atualizarDados();
+            });
+        }
     }
+
     function monitorar() {
         equipe.forEach((_, i) => {
             const cb = document.getElementById(`check-${i}`);
             document.getElementById(`motivo-${i}`).classList.toggle('hidden', cb.checked);
         });
     }
-    function reiniciar() { document.getElementById('tela-sucesso').classList.add('hidden'); document.getElementById('fill').style.width = "0%"; atualizarDados(); }
+
+    function reiniciar() {
+        document.getElementById('tela-sucesso').classList.add('hidden');
+        document.getElementById('fill').style.width = "0%";
+        atualizarDados();
+    }
+
     window.onload = atualizarDados;
 </script>
 </body>
