@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frequência Telejur - Juruti</title>
     <style>
-        :root { --primary: #007bff; --secondary: #25D366; --bg: #f4f7f6; --white: #ffffff; }
+        :root { --primary: #007bff; --secondary: #25D366; --bg: #f4f7f6; --white: #ffffff; --danger: #e53e3e; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); padding: 15px; display: flex; justify-content: center; margin: 0; }
         .container { width: 100%; max-width: 450px; background: var(--white); padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; box-sizing: border-box; min-height: 580px; overflow: hidden; display: flex; flex-direction: column; }
         
@@ -13,22 +13,7 @@
         .titulo-principal { color: var(--primary); font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0; }
         .sub-titulo { color: var(--primary); font-size: 15px; font-weight: 600; margin: 5px 0 10px 0; }
         
-        /* PAINEL GPS COMPACTO E CENTRALIZADO */
-        .btn-gps { 
-            background: #f8f9fa; 
-            border: 1px solid #e2e8f0; 
-            padding: 10px; /* Reduzido de 15px */
-            border-radius: 16px; 
-            margin: 0 auto 15px auto; /* Centralizado com margem automática nas laterais */
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            width: 90%; /* Proporcional ao container */
-            min-height: 60px; /* Reduzido de 90px */
-            box-sizing: border-box;
-        }
+        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 10px; border-radius: 16px; margin: 0 auto 15px auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 90%; min-height: 60px; box-sizing: border-box; }
         .btn-gps b { font-size: 14px; }
         .btn-gps small { font-size: 11px; color: #718096; }
 
@@ -42,8 +27,10 @@
         button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 18px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); }
         
         #secao-gestao { padding: 10px; }
-        .item-admin { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
-        .btn-del { color: #e53e3e; border: none; background: none; font-weight: bold; cursor: pointer; padding: 5px 10px; }
+        .item-admin { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; font-size: 15px; }
+        /* ESTILO DA LIXEIRA */
+        .btn-del { font-size: 20px; border: none; background: none; cursor: pointer; padding: 5px; transition: transform 0.2s; }
+        .btn-del:active { transform: scale(1.3); }
 
         #tela-sucesso { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 100; padding: 30px; box-sizing: border-box; }
         .progress-bar { width: 150px; height: 4px; background: #eee; border-radius: 2px; margin-top: 15px; overflow: hidden; }
@@ -89,9 +76,9 @@
     <div id="secao-gestao" class="hidden">
         <h3 style="text-align:center; color:var(--primary); margin-bottom:20px;">Painel Administrativo</h3>
         <input type="text" id="novo-nome" placeholder="Digite o nome completo...">
-        <button onclick="addFuncionario()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold;">+ ADICIONAR FUNCIONÁRIO</button>
-        <div id="lista-admin" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius:12px; border: 1px solid #eee;"></div>
-        <button onclick="fecharGestao()" style="width:100%; background:#718096; color:white; border:none; padding:12px; border-radius:12px; margin-top:20px;">VOLTAR</button>
+        <button onclick="addFuncionario()" style="width:100%; background:var(--primary); color:white; border:none; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">+ ADICIONAR FUNCIONÁRIO</button>
+        <div id="lista-admin" style="max-height: 250px; overflow-y: auto; background: #fff; border-radius:12px; border: 1px solid #eee; margin-top: 15px;"></div>
+        <button onclick="fecharGestao()" style="width:100%; background:#718096; color:white; border:none; padding:12px; border-radius:12px; margin-top:20px; font-weight:bold;">VOLTAR</button>
     </div>
 </div>
 
@@ -100,10 +87,7 @@
     let equipe = [];
     let dadosLoc = { link: "", unidadeMsg: "FORA DA PLANTA", hora: "" };
 
-    const locais = {
-        porto: { lat: -2.1677, lon: -56.1017 },
-        beneficiamento: { lat: -2.3166, lon: -56.2415 }
-    };
+    const locais = { porto: { lat: -2.1677, lon: -56.1017 }, beneficiamento: { lat: -2.3166, lon: -56.2415 } };
 
     function emitirBip() {
         try {
@@ -197,7 +181,8 @@
             equipe.forEach((nome, i) => {
                 listaDiv.innerHTML += `<div class="item-lista"><span class="nome-func">${nome}</span><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:24px; height:24px;"><select id="motivo-${i}" class="hidden" style="width:160px; padding:6px; font-size:13px;"><option value="Falta não justificada">Falta não justificada</option><option value="Falta justificada">Falta justificada</option><option value="Atestado">Atestado</option><option value="Férias">Férias</option></select></div></div>`;
                 selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
-                listaAdm.innerHTML += `<div class="item-admin"><span>${nome}</span><button class="btn-del" onclick="deletarFuncionario('${nome}')">EXCLUIR</button></div>`;
+                // ÍCONE DE LIXEIRA NO LUGAR DO "X"
+                listaAdm.innerHTML += `<div class="item-admin"><span><b>${nome}</b></span><button class="btn-del" onclick="deletarFuncionario('${nome}')" title="Excluir">🗑️</button></div>`;
             });
         });
     }
@@ -215,16 +200,27 @@
     }
 
     function addFuncionario() {
-        const nome = document.getElementById('novo-nome').value;
-        if(!nome) return;
+        const inputNome = document.getElementById('novo-nome');
+        const nome = inputNome.value;
+        if(!nome) return alert("Por favor, digite o nome!");
+        
         chamadaAPI(`acao=add&nome=${encodeURIComponent(nome)}&senha=123`, () => {
-            document.getElementById('novo-nome').value = "";
+            emitirBip();
+            alert(`${nome} cadastrado com sucesso!`);
+            inputNome.value = "";
             atualizarDados();
         });
     }
 
+    // LOGICA DE EXCLUSÃO COM BIP E FEEDBACK
     function deletarFuncionario(nome) {
-        if(confirm(`Remover ${nome}?`)) chamadaAPI(`acao=deletar&nome=${encodeURIComponent(nome)}&senha=123`, atualizarDados);
+        if(confirm(`Deseja realmente remover ${nome}?`)) {
+            chamadaAPI(`acao=deletar&nome=${encodeURIComponent(nome)}&senha=123`, () => {
+                emitirBip(); // Bip de confirmação
+                alert(`${nome} removido com sucesso!`); // Mensagem de feedback
+                atualizarDados();
+            });
+        }
     }
 
     function monitorar() {
