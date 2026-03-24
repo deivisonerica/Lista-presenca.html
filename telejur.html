@@ -13,13 +13,12 @@
         .sub-titulo { color: var(--primary); font-size: 15px; font-weight: 600; margin: 5px 0 10px 0; }
         .btn-admin-top { display: inline-block; background: rgba(0, 123, 255, 0.1); color: var(--primary); border: 1px solid rgba(0, 123, 255, 0.2); padding: 6px 12px; border-radius: 10px; font-size: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
         .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #f8fafc; }
-        .nome-func { font-size: 14px; font-weight: 500; flex-grow: 1; }
-        select, input[type="text"] { width: 100%; font-size: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
+        .nome-func { font-size: 14px; font-weight: 500; }
+        select, input[type="text"] { width: 100%; font-size: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; }
         .hidden { display: none !important; }
-        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; box-sizing: border-box; }
-        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); transition: transform 0.2s; }
+        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; box-sizing: border-box; min-height: 90px; }
+        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); }
         
-        /* TELA DE SUCESSO E PROGRESSO */
         #tela-sucesso { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 100; padding: 30px; box-sizing: border-box; }
         .progress-bar { width: 150px; height: 4px; background: #eee; border-radius: 2px; margin-top: 15px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--secondary); width: 0%; transition: width 3s linear; }
@@ -32,7 +31,7 @@
         <h1 style="font-size: 60px; margin: 0;">✅</h1>
         <h2 style="color: #2d3748; margin: 10px 0;">Registrado com sucesso</h2>
         <p id="msg-agradecimento" style="font-size: 18px; color: #718096; font-weight: 600;"></p>
-        <p style="font-size: 12px; color: #a0aec0; margin-top: 20px;">Abrindo WhatsApp em 3 segundos...</p>
+        <p style="font-size: 11px; color: #a0aec0; margin-top: 20px;">Abrindo WhatsApp em 3 segundos...</p>
         <div class="progress-bar"><div id="fill" class="progress-fill"></div></div>
     </div>
 
@@ -48,14 +47,14 @@
             <option value="individual">Individual (Validar Local)</option>
         </select>
 
-        <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
+        <div id="status-gps" class="btn-gps hidden">⌛ Localizando posição...</div>
 
         <div id="campos-individual" class="hidden">
             <select id="select-individual"></select>
         </div>
 
         <div id="campos-geral">
-            <div id="corpo-lista" style="max-height: 350px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 12px;">Carregando equipe...</div>
+            <div id="corpo-lista" style="max-height: 300px; overflow-y: auto;">Carregando equipe...</div>
         </div>
 
         <button id="btn-principal" class="enviar" onclick="processarEnvio()" style="margin-top: 20px;">🚀 Enviar lista de frequencia</button>
@@ -65,7 +64,13 @@
 <script>
     const URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
     let equipe = [];
-    let dadosLoc = { link: "Não obtido", hora: "--:--" };
+    let dadosLoc = { link: "", unidadeMsg: "FORA DA PLANTA", hora: "" };
+
+    // Coordenadas Alcoa Juruti
+    const locais = {
+        porto: { lat: -2.1677, lon: -56.1017, nome: "ALCOA PORTO" },
+        beneficiamento: { lat: -2.3166, lon: -56.2415, nome: "ALCOA BENEFICIAMENTO" }
+    };
 
     function emitirBip() {
         try {
@@ -79,13 +84,41 @@
         } catch(e) {}
     }
 
+    // Cálculo de distância para definir se está na planta
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; 
+        const φ1 = lat1 * Math.PI/180;
+        const φ2 = lat2 * Math.PI/180;
+        const Δφ = (lat2-lat1) * Math.PI/180;
+        const Δλ = (lon2-lon1) * Math.PI/180;
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
     async function obterGps() {
         if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition((pos) => {
             const lat = pos.coords.latitude; const lon = pos.coords.longitude;
             dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            dadosLoc.link = `http://google.com/maps?q=${lat},${lon}`;
-            document.getElementById('status-gps').innerHTML = `<span style="color:#2c7a7b">📍 Localização Obtida</span><small>${dadosLoc.hora}</small>`;
+            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            const distPorto = calcularDistancia(lat, lon, locais.porto.lat, locais.porto.lon);
+            const distBenef = calcularDistancia(lat, lon, locais.beneficiamento.lat, locais.beneficiamento.lon);
+
+            const statusGps = document.getElementById('status-gps');
+            if (distPorto < 1000) {
+                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA PORTO";
+                statusGps.innerHTML = `<span style="color:#2c7a7b; font-weight:bold;">✅ ALCOA PORTO</span><small>Localização validada</small>`;
+                statusGps.style.backgroundColor = "#e6fffa";
+            } else if (distBenef < 2500) {
+                dadosLoc.unidadeMsg = "PRESENTE NA ALCOA BENEFICIAMENTO";
+                statusGps.innerHTML = `<span style="color:#2c7a7b; font-weight:bold;">✅ ALCOA BENEFICIAMENTO</span><small>Localização validada</small>`;
+                statusGps.style.backgroundColor = "#e6fffa";
+            } else {
+                dadosLoc.unidadeMsg = "FORA DA PLANTA";
+                statusGps.innerHTML = `<span style="color:#c53030; font-weight:bold;">🛑 FORA DA PLANTA</span><small>Distante das unidades</small>`;
+                statusGps.style.backgroundColor = "#fff5f5";
+            }
         }, null, { enableHighAccuracy: true });
     }
 
@@ -94,28 +127,24 @@
         const modo = document.getElementById('modo-envio').value;
         const dataH = new Date().toLocaleDateString('pt-BR');
         let msg = "";
-        let nomeAgradecimento = "";
+        let nomeFunc = "";
 
         if (modo === "individual") {
-            nomeAgradecimento = document.getElementById('select-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n👤 *Func.:* ${nomeAgradecimento}\n📅 *Data:* ${dataH}\n📍 *GPS:* ${dadosLoc.link}`;
+            nomeFunc = document.getElementById('select-individual').value;
+            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeFunc}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.hora}\n📍 *Mapa:* ${dadosLoc.link}`;
         } else {
-            nomeAgradecimento = "Equipe";
+            nomeFunc = "Equipe";
             let p = [], f = [];
             equipe.forEach((n, i) => {
                 const cb = document.getElementById(`check-${i}`);
                 if (cb.checked) p.push(`_${n}_`);
                 else f.push(`_${n}_ (${document.getElementById(`motivo-${i}`).value})`);
             });
-            // Alterado para "Presente na Planta:" conforme solicitado
             msg = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n✅ *Presente na Planta:* ${p.length}\n${p.join('\n')}\n\n❌ *Ausentes:* ${f.length}\n${f.join('\n')}`;
         }
 
-        // Exibir tela de sucesso com agradecimento personalizado
-        document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeAgradecimento}`;
+        document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeFunc}`;
         document.getElementById('tela-sucesso').classList.remove('hidden');
-        
-        // Iniciar barra de progresso (3s)
         setTimeout(() => { document.getElementById('fill').style.width = "100%"; }, 50);
 
         setTimeout(() => {
@@ -181,7 +210,7 @@
         atualizarDados();
     }
 
-    function abrirGestao() { if(prompt("Senha:")==="123") { /* Mantido via Google Script */ } }
+    function abrirGestao() { if(prompt("Senha:")==="123") { /* Admin via Script */ } }
     window.onload = atualizarDados;
 </script>
 </body>
