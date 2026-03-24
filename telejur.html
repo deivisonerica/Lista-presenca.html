@@ -7,21 +7,23 @@
     <style>
         :root { --primary: #007bff; --secondary: #25D366; --bg: #f4f7f6; --white: #ffffff; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); padding: 15px; display: flex; justify-content: center; margin: 0; }
-        .container { width: 100%; max-width: 450px; background: var(--white); padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; box-sizing: border-box; min-height: 550px; }
+        .container { width: 100%; max-width: 450px; background: var(--white); padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); position: relative; box-sizing: border-box; min-height: 550px; overflow: hidden; }
         .header-area { text-align: center; margin-bottom: 20px; }
         .titulo-principal { color: var(--primary); font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0; }
         .sub-titulo { color: var(--primary); font-size: 15px; font-weight: 600; margin: 5px 0 10px 0; }
         .btn-admin-top { display: inline-block; background: rgba(0, 123, 255, 0.1); color: var(--primary); border: 1px solid rgba(0, 123, 255, 0.2); padding: 6px 12px; border-radius: 10px; font-size: 10px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
-        .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .status-box { background: #fff; padding: 10px; border-radius: 15px; border: 1px solid #edf2f7; text-align: center; }
-        .status-box span { display: block; font-size: 18px; font-weight: 800; color: #075E54; }
-        .status-box label { font-size: 9px; text-transform: uppercase; color: #a0aec0; font-weight: 700; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f8fafc; }
-        select, input[type="text"] { width: 100%; font-size: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; border-bottom: 1px solid #f8fafc; }
+        .nome-func { font-size: 14px; font-weight: 500; flex-grow: 1; }
+        select, input[type="text"] { width: 100%; font-size: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; padding: 12px; margin-bottom: 12px; box-sizing: border-box; outline: none; }
         .hidden { display: none !important; }
-        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 80px; width: 100%; box-sizing: border-box; }
-        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); }
-        #tela-sucesso { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 100; padding: 30px; box-sizing: border-box; border-radius: 24px; }
+        .btn-gps { background: #f8f9fa; border: 1px solid #e2e8f0; padding: 15px; border-radius: 16px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; box-sizing: border-box; }
+        button.enviar { width: 100%; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; border: none; padding: 18px; font-size: 16px; border-radius: 16px; cursor: pointer; font-weight: 700; box-shadow: 0 8px 15px rgba(37, 211, 102, 0.2); transition: transform 0.2s; }
+        button.enviar:active { transform: scale(0.98); }
+        
+        /* TELA DE SUCESSO E PROGRESSO */
+        #tela-sucesso { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; z-index: 100; padding: 30px; box-sizing: border-box; }
+        .progress-bar { width: 150px; height: 4px; background: #eee; border-radius: 2px; margin-top: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--secondary); width: 0%; transition: width 3s linear; }
     </style>
 </head>
 <body>
@@ -31,7 +33,8 @@
         <h1 style="font-size: 60px; margin: 0;">✅</h1>
         <h2 style="color: #2d3748; margin: 10px 0;">Registrado com sucesso</h2>
         <p id="msg-agradecimento" style="font-size: 18px; color: #718096;"></p>
-        <p style="font-size: 12px; color: #a0aec0;">Redirecionando para o WhatsApp...</p>
+        <p style="font-size: 12px; color: #a0aec0; margin-top: 20px;">Abrindo WhatsApp em 3 segundos...</p>
+        <div class="progress-bar"><div id="fill" class="progress-fill"></div></div>
     </div>
 
     <div id="interface-usuario">
@@ -53,13 +56,7 @@
         </div>
 
         <div id="campos-geral">
-            <div class="card-status">
-                <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
-                <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
-                <div class="status-box"><span id="count-faltajust">0</span><label>Justificado</label></div>
-                <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
-            </div>
-            <div id="corpo-lista" style="max-height: 250px; overflow-y: auto;">Buscando equipe...</div>
+            <div id="corpo-lista" style="max-height: 350px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 12px;">Carregando equipe...</div>
         </div>
 
         <button id="btn-principal" class="enviar" onclick="processarEnvio()" style="margin-top: 20px;">🚀 Enviar lista de frequencia</button>
@@ -70,7 +67,6 @@
     const URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
     let equipe = [];
     let dadosLoc = { link: "Não obtido", unidadeMsg: "NÃO IDENTIFICADO", hora: "--:--" };
-    const portoAlcoa = { lat: -2.1677, lon: -56.1017 };
 
     function emitirBip() {
         try {
@@ -90,17 +86,7 @@
             const lat = pos.coords.latitude; const lon = pos.coords.longitude;
             dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
-            const dist = Math.sqrt(Math.pow(lat - portoAlcoa.lat, 2) + Math.pow(lon - portoAlcoa.lon, 2)) * 111320;
-            const statusGps = document.getElementById('status-gps');
-            if (dist <= 800) {
-                dadosLoc.unidadeMsg = "ALCOA - PORTO";
-                statusGps.innerHTML = `<span style="color:#2c7a7b">✅ ALCOA - PORTO</span><small>${dadosLoc.hora}</small>`;
-                statusGps.style.backgroundColor = "#e6fffa";
-            } else {
-                dadosLoc.unidadeMsg = "FORA DA PLANTA";
-                statusGps.innerHTML = `<span style="color:#c53030">🛑 FORA DA PLANTA</span><small>${dadosLoc.hora}</small>`;
-                statusGps.style.backgroundColor = "#fff5f5";
-            }
+            document.getElementById('status-gps').innerHTML = `<span style="color:#2c7a7b">📍 Localização Obtida</span><small>${dadosLoc.hora}</small>`;
         }, null, { enableHighAccuracy: true });
     }
 
@@ -113,7 +99,7 @@
 
         if (modo === "individual") {
             nomeSucesso = document.getElementById('select-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n\n👤 *Funcionário:* ${nomeSucesso}\n🏢 *Unidade:* ${dadosLoc.unidadeMsg}\n📅 *Data:* ${dataH}\n⏰ *Hora:* ${dadosLoc.hora}\n📍 *GPS:* ${dadosLoc.link}`;
+            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n👤 *Func.:* ${nomeSucesso}\n📅 *Data:* ${dataH}\n📍 *GPS:* ${dadosLoc.link}`;
         } else {
             let p = [], f = [];
             equipe.forEach((n, i) => {
@@ -124,17 +110,16 @@
             msg = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n✅ *Presentes:* ${p.length}\n${p.join('\n')}\n\n❌ *Ausentes:* ${f.length}\n${f.join('\n')}`;
         }
 
-        // 1. Exibir tela de sucesso
+        // Exibir tela de sucesso com barra de progresso
         document.getElementById('msg-agradecimento').innerText = `Obrigado, ${nomeSucesso}`;
         document.getElementById('tela-sucesso').classList.remove('hidden');
+        document.getElementById('fill').style.width = "100%";
 
-        // 2. Abrir WhatsApp após um pequeno delay (para o usuário ver o check)
+        // Aguardar 3 segundos antes de abrir o WhatsApp
         setTimeout(() => {
             window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
-            
-            // 3. Resetar o sistema para o início após abrir o WhatsApp
             setTimeout(reiniciar, 1000); 
-        }, 800);
+        }, 3000);
     }
 
     function alternarModo() {
@@ -161,7 +146,19 @@
             const selInd = document.getElementById('select-individual');
             listaDiv.innerHTML = ""; selInd.innerHTML = "";
             equipe.forEach((nome, i) => {
-                listaDiv.innerHTML += `<div class="item-lista"><span>${nome}</span><div><input type="checkbox" id="check-${i}" checked onchange="monitorar()"><select id="motivo-${i}" class="hidden" style="width:100px; padding:2px;"><option value="Falta">Falta</option><option value="Férias">Férias</option><option value="Atestado">Atestado</option></select></div></div>`;
+                listaDiv.innerHTML += `
+                    <div class="item-lista">
+                        <span class="nome-func">${nome}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" id="check-${i}" checked onchange="monitorar()" style="width:18px; height:18px;">
+                            <select id="motivo-${i}" class="hidden" style="width:140px; margin:0; padding:4px; font-size:12px;">
+                                <option value="Falta não justificada">Falta não justificada</option>
+                                <option value="Falta justificada">Falta justificada</option>
+                                <option value="Atestado">Atestado</option>
+                                <option value="Férias">Férias</option>
+                            </select>
+                        </div>
+                    </div>`;
                 selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
             });
         });
@@ -176,12 +173,13 @@
 
     function reiniciar() {
         document.getElementById('tela-sucesso').classList.add('hidden');
+        document.getElementById('fill').style.width = "0%";
         document.getElementById('modo-envio').value = "geral";
         alternarModo();
         atualizarDados();
     }
 
-    function abrirGestao() { if(prompt("Senha:")==="123") { /* Logica de gestao ja existente */ } }
+    function abrirGestao() { if(prompt("Senha:")==="123") { /* Logica de gestao ja existente no Google Script */ } }
     window.onload = atualizarDados;
 </script>
 </body>
