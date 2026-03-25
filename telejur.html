@@ -84,7 +84,8 @@
     let timerID = null;
     let dadosLoc = { link: "", unidadeMsg: "FORA DA PLANTA", horaEnvio: "" };
 
-    const locais = { porto: { lat: -2.1677, lon: -56.1017 }, beneficiamento: { lat: -2.3166, lon: -56.2415 } };
+    // Coordenadas atualizadas para o Beneficiamento
+    const locais = { porto: { lat: -2.1677, lon: -56.1017 }, beneficiamento: { lat: -2.5116, lon: -56.1678 } };
 
     function iniciarRelogio() {
         if (timerID) clearInterval(timerID);
@@ -102,20 +103,32 @@
         watchID = navigator.geolocation.watchPosition((pos) => {
             const lat = pos.coords.latitude; 
             const lon = pos.coords.longitude;
+            // Link de mapas conforme solicitado
             dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            
             const distPorto = calcularDistancia(lat, lon, locais.porto.lat, locais.porto.lon);
             const distBenef = calcularDistancia(lat, lon, locais.beneficiamento.lat, locais.beneficiamento.lon);
             const txtLocal = document.getElementById('txt-local');
-            if (distPorto < 1000) { dadosLoc.unidadeMsg = "ALCOA PORTO"; txtLocal.innerHTML = "✅ PORTO"; }
-            else if (distBenef < 2500) { dadosLoc.unidadeMsg = "ALCOA BENEFICIAMENTO"; txtLocal.innerHTML = "✅ BENEFICIAMENTO"; }
-            else { dadosLoc.unidadeMsg = "FORA DA PLANTA"; txtLocal.innerHTML = "🛑 FORA DA PLANTA"; }
+            
+            if (distPorto < 1500) { 
+                dadosLoc.unidadeMsg = "ALCOA PORTO"; 
+                txtLocal.innerHTML = "✅ PORTO"; 
+            } else if (distBenef < 2500) { 
+                dadosLoc.unidadeMsg = "ALCOA BENEFICIAMENTO"; 
+                txtLocal.innerHTML = "✅ BENEFICIAMENTO"; 
+            } else { 
+                dadosLoc.unidadeMsg = "FORA DA PLANTA"; 
+                txtLocal.innerHTML = "🛑 FORA DA PLANTA"; 
+            }
         }, null, { enableHighAccuracy: true });
     }
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
         const R = 6371e3; 
-        const a = Math.sin(((lat2-lat1)*Math.PI/180)/2) ** 2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(((lon2-lon1)*Math.PI/180)/2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     function atualizarDados() {
@@ -139,6 +152,7 @@
         document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
         document.getElementById('status-gps').classList.toggle('hidden', modo === 'geral');
         if (modo === 'individual') { iniciarRelogio(); iniciarRastreioGps(); }
+        else { if(watchID) navigator.geolocation.clearWatch(watchID); }
     }
 
     function processarEnvio() {
@@ -148,7 +162,7 @@
         if (modo === "individual") {
             nomeF = document.getElementById('select-individual').value;
             const tipo = document.getElementById('tipo-registro-individual').value;
-            msg = `*FREQUÊNCIA INDIVIDUAL*\n👤 *Mot:* ${nomeF}\n📝 *Tipo:* ${tipo}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📍 *Local:* ${dadosLoc.link}`;
+            msg = `*FREQUÊNCIA INDIVIDUAL - TELEJUR*\n👤 *Mot:* ${nomeF}\n📝 *Tipo:* ${tipo}\n🏢 *Status:* ${dadosLoc.unidadeMsg}\n📍 *Local:* ${dadosLoc.link}`;
             params = `acao=salvar_ponto&nome=${encodeURIComponent(nomeF)}&tipo=${encodeURIComponent(tipo)}&local=${encodeURIComponent(dadosLoc.unidadeMsg)}&link=${encodeURIComponent(dadosLoc.link)}`;
         } else {
             nomeF = "Equipe";
@@ -157,7 +171,7 @@
                 if (document.getElementById(`check-${i}`).checked) p.push(`_${n}_`);
                 else f.push(`_${n}_ (${document.getElementById(`motivo-${i}`).value})`);
             });
-            msg = `*LISTA FREQUÊNCIA*\n✅ Presentes: ${p.length}\n❌ Ausentes: ${f.length}\n\n${p.join('\n')}\n\nAUSENTES:\n${f.join('\n')}`;
+            msg = `*LISTA FREQUÊNCIA - TELEJUR*\n✅ Presentes: ${p.length}\n❌ Ausentes: ${f.length}\n\n${p.join('\n')}\n\n*AUSENTES:*\n${f.join('\n')}`;
             params = `acao=salvar_ponto&nome=Equipe&tipo=Lista Geral&local=Planta&link=N/A`;
         }
 
