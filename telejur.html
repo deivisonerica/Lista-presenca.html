@@ -6,25 +6,30 @@
     <title>Frequência Telejur</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-        h2 { color: #075E54; text-align: center; margin-bottom: 20px; font-size: 22px; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
+        h2 { color: #075E54; text-align: center; margin-bottom: 20px; }
+        .btn-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 20px; background: none; border: none; }
         .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
         .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
         .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
         .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
         .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
-        .item-info { display: flex; align-items: center; gap: 10px; }
-        .item-info input { transform: scale(1.3); cursor: pointer; }
-        .nome-func { font-size: 14px; color: #333; font-weight: 600; }
-        select { border-radius: 8px; border: 1px solid #ccc; padding: 8px; font-size: 12px; background: white; }
+        .nome-func { font-size: 14px; font-weight: 600; }
+        select { border-radius: 8px; border: 1px solid #ccc; padding: 5px; font-size: 12px; }
         .hidden { display: none; }
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        #loader { text-align: center; padding: 20px; color: #666; font-weight: bold; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        /* Modal Admin */
+        #modal-admin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; padding: 20px; box-sizing: border-box; }
+        .admin-row { display: flex; gap: 5px; margin-bottom: 15px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+        .btn-add { background: #25D366; color: white; border: none; padding: 10px; border-radius: 8px; }
+        .btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <button class="btn-admin" onclick="abrirAdmin()">⚙️</button>
     <h2>📋 Frequência Telejur</h2>
 
     <div class="card-status">
@@ -34,10 +39,23 @@
         <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
     </div>
 
-    <div id="loader">⌛ Carregando equipe da planilha...</div>
+    <div id="loader" style="text-align: center;">⌛ Carregando...</div>
     <div id="corpo-lista"></div>
-
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
+</div>
+
+<div id="modal-admin" class="hidden">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h3>Gerenciar Equipe</h3>
+        <button onclick="fecharAdmin()" style="border:none; background:none; font-size:25px;">✕</button>
+    </div>
+    
+    <div class="admin-row">
+        <input type="text" id="novo-nome" placeholder="Nome do funcionário">
+        <button class="btn-add" onclick="salvarFuncionario()">Adicionar</button>
+    </div>
+
+    <div id="lista-admin"></div>
 </div>
 
 <script>
@@ -49,6 +67,7 @@
         window[id] = (data) => {
             equipe = data;
             renderizarLista();
+            renderizarAdmin();
             delete window[id];
             document.getElementById(id).remove();
         };
@@ -59,20 +78,13 @@
     }
 
     function renderizarLista() {
-        const loader = document.getElementById('loader');
-        if(loader) loader.classList.add('hidden');
+        document.getElementById('loader').classList.add('hidden');
         const listaDiv = document.getElementById('corpo-lista');
         listaDiv.innerHTML = "";
-
-        if (!equipe || equipe.length === 0 || equipe[0].startsWith("Erro")) {
-            listaDiv.innerHTML = "<p style='color:red; text-align:center;'>Nenhum funcionário encontrado.</p>";
-            return;
-        }
-
         equipe.forEach((nome, i) => {
             listaDiv.innerHTML += `
                 <div class="item-lista">
-                    <div class="item-info">
+                    <div style="display:flex; align-items:center; gap:10px;">
                         <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
                         <span class="nome-func">${nome}</span>
                     </div>
@@ -88,6 +100,34 @@
         monitorar();
     }
 
+    function renderizarAdmin() {
+        const adminDiv = document.getElementById('lista-admin');
+        adminDiv.innerHTML = "";
+        equipe.forEach(nome => {
+            adminDiv.innerHTML += `
+                <div class="item-lista">
+                    <span>${nome}</span>
+                    <button class="btn-del" onclick="removerFuncionario('${nome}')">Excluir</button>
+                </div>`;
+        });
+    }
+
+    async function salvarFuncionario() {
+        const nome = document.getElementById('novo-nome').value;
+        if(!nome) return;
+        document.getElementById('loader').classList.remove('hidden');
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'add', nome: nome}) });
+        document.getElementById('novo-nome').value = "";
+        buscarNomes();
+    }
+
+    async function removerFuncionario(nome) {
+        if(!confirm("Excluir "+nome+"?")) return;
+        document.getElementById('loader').classList.remove('hidden');
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'del', nome: nome}) });
+        buscarNomes();
+    }
+
     function monitorar() {
         let f=0, a=0, j=0, s=0;
         equipe.forEach((_, i) => {
@@ -95,10 +135,8 @@
             const sel = document.getElementById(`motivo-${i}`);
             if (cb && !cb.checked) {
                 sel.classList.remove('hidden');
-                if (sel.value === "Férias") f++;
-                else if (sel.value === "Atestado") a++;
-                else if (sel.value === "Falta justificada") j++;
-                else s++;
+                const v = sel.value;
+                if (v === "Férias") f++; else if (v === "Atestado") a++; else if (v === "Falta justificada") j++; else s++;
             } else if (cb) sel.classList.add('hidden');
         });
         document.getElementById('count-ferias').innerText = f;
@@ -107,10 +145,12 @@
         document.getElementById('count-faltas').innerText = s;
     }
 
+    function abrirAdmin() { document.getElementById('modal-admin').classList.remove('hidden'); }
+    function fecharAdmin() { document.getElementById('modal-admin').classList.add('hidden'); }
+
     function enviarWhatsapp() {
         const dataH = new Date().toLocaleDateString('pt-BR');
         let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
-
         equipe.forEach((nome, i) => {
             const cb = document.getElementById(`check-${i}`);
             if (cb && cb.checked) cat.planta.push(`_${nome}_`);
@@ -123,14 +163,7 @@
                 else cat.falta.push(`_${nome}_`);
             }
         });
-
-        const msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n` +
-                    `✅ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n` +
-                    `✔️ *Férias:* ${cat.ferias.join(', ') || '0'}\n` +
-                    `✔️ *Atestado:* ${cat.atestado.join(', ') || '0'}\n` +
-                    `✔️ *Falta justificada:* ${cat.just.join(', ') || '0'}\n` +
-                    `✔️ *Faltas:* ${cat.falta.join(', ') || '0'}`;
-
+        const msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n✅ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n✔️ *Férias:* ${cat.ferias.join(', ') || '0'}\n✔️ *Atestado:* ${cat.atestado.join(', ') || '0'}\n✔️ *Falta justificada:* ${cat.just.join(', ') || '0'}\n✔️ *Faltas:* ${cat.falta.join(', ') || '0'}`;
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
 
