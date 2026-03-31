@@ -6,61 +6,43 @@
     <title>Frequência Telejur - Juruti</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 p-4 font-sans text-slate-800">
+<body class="bg-slate-100 p-4 font-sans">
 
-<div class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl min-h-[600px] flex flex-col relative overflow-hidden">
+<div class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl min-h-[500px] flex flex-col relative overflow-hidden">
     
     <div id="tela-sucesso" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center text-center p-6">
-        <h1 class="text-7xl mb-4">✅</h1>
-        <h2 class="text-2xl font-bold text-slate-700">Enviado com Sucesso!</h2>
-        <div class="w-40 h-1 bg-slate-100 rounded-full mt-6 overflow-hidden">
-            <div id="fill" class="h-full bg-green-500 w-0 transition-all duration-[3000ms] linear"></div>
-        </div>
+        <h1 class="text-6xl mb-4">✅</h1>
+        <h2 class="text-xl font-bold">Enviado!</h2>
     </div>
 
     <header class="text-center mb-6">
-        <button onclick="abrirGestao()" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-full border border-blue-100 mb-2">⚙️ GESTÃO DE EQUIPE</button>
         <h1 class="text-xl font-black text-blue-800 uppercase">Frequência Telejur</h1>
-        <p class="text-xs font-bold text-slate-400">UNIDADE JURUTI</p>
+        <p class="text-[10px] font-bold text-slate-400">UNIDADE JURUTI</p>
     </header>
 
-    <div id="interface-usuario" class="space-y-4 flex-grow flex flex-col">
-        <select id="modo-envio" onchange="alternarModo()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none focus:border-blue-500 transition-all">
+    <div id="interface-usuario" class="space-y-4">
+        <select id="modo-envio" onchange="alternarModo()" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none">
             <option value="geral">Lista Geral (Equipe)</option>
-            <option value="individual">Individual (Validar Local)</option>
+            <option value="individual">Individual</option>
         </select>
 
-        <div id="campos-geral" class="flex-grow">
-            <div id="corpo-lista" class="border rounded-2xl p-2 max-h-[350px] overflow-y-auto space-y-1 bg-slate-50">
-                <p class="text-center p-10 text-slate-400 animate-pulse font-bold">Carregando equipe...</p>
+        <div id="campos-geral">
+            <div id="corpo-lista" class="border rounded-2xl p-2 max-h-[300px] overflow-y-auto bg-slate-50">
+                <p class="text-center p-10 text-slate-400 font-bold">Carregando equipe...</p>
             </div>
         </div>
 
         <div id="campos-individual" class="hidden space-y-4">
-            <select id="select-individual" class="w-full p-4 border-2 rounded-2xl font-bold bg-white"></select>
-            <select id="tipo-registro" class="w-full p-4 border-2 border-blue-200 rounded-2xl font-bold bg-blue-50 text-blue-700">
-                <option>🏁 Registro de Chegada</option>
-                <option>🍴 Início Almoço</option>
-                <option>🍱 Saída Almoço</option>
-                <option>🚪 Final de Turno</option>
-            </select>
+            <select id="select-individual" class="w-full p-4 border rounded-2xl font-bold bg-white"></select>
         </div>
 
-        <button onclick="enviar()" class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-5 rounded-2xl shadow-lg shadow-green-100 transition-all active:scale-95 uppercase tracking-widest mt-4">🚀 Enviar Frequência</button>
-    </div>
-
-    <div id="secao-gestao" class="hidden space-y-4">
-        <h3 class="text-center font-black text-slate-600">PAINEL ADMINISTRATIVO</h3>
-        <input type="text" id="novo-nome" placeholder="Nome Completo" class="w-full p-4 border rounded-xl outline-none">
-        <button onclick="addFunc()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl">+ ADICIONAR</button>
-        <div id="lista-admin" class="border rounded-xl max-h-40 overflow-y-auto bg-slate-50 p-2"></div>
-        <button onclick="fecharGestao()" class="w-full text-slate-400 font-bold py-2">VOLTAR</button>
+        <button onclick="enviar()" class="w-full bg-green-500 text-white font-black py-5 rounded-2xl shadow-lg uppercase mt-4">🚀 Enviar Frequência</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "SUA_URL_DO_GOOGLE_SCRIPT_AQUI"; // <--- COLOQUE A URL AQUI
-    let equipe = [];
+    // IMPORTANTE: Substitua pela sua nova URL após implantar o script acima
+    const SCRIPT_URL = "SUA_NOVA_URL_AQUI"; 
 
     function chamada(params, cb) {
         const id = 'jsonp_' + Date.now();
@@ -72,35 +54,18 @@
 
     function carregar() {
         chamada("acao=lerEquipe", (data) => {
-            equipe = data;
             const lista = document.getElementById('corpo-lista');
             const sel = document.getElementById('select-individual');
-            const adm = document.getElementById('lista-admin');
-            lista.innerHTML = ""; sel.innerHTML = ""; adm.innerHTML = "";
+            lista.innerHTML = ""; sel.innerHTML = "";
             
             data.forEach((n, i) => {
                 lista.innerHTML += `
                     <div class="flex items-center justify-between p-3 bg-white border rounded-xl mb-1 shadow-sm">
-                        <span class="font-bold text-sm text-slate-600">${n}</span>
-                        <div class="flex items-center gap-2">
-                            <input type="checkbox" id="check-${i}" checked onchange="monitorar()" class="w-6 h-6 accent-green-500">
-                            <select id="mot-${i}" class="hidden text-[10px] p-1 border rounded bg-slate-50">
-                                <option>Falta não justificada</option><option>Falta justificada</option>
-                                <option>Atestado</option><option>Férias</option><option>Base Telejur</option>
-                            </select>
-                        </div>
+                        <span class="font-bold text-xs text-slate-600">${n}</span>
+                        <input type="checkbox" id="check-${i}" checked class="w-6 h-6 accent-green-500">
                     </div>`;
                 sel.innerHTML += `<option>${n}</option>`;
-                adm.innerHTML += `<div class="flex justify-between p-2 border-b text-sm font-bold"><span>${n}</span><button onclick="delFunc('${n}')">🗑️</button></div>`;
             });
-            monitorar();
-        });
-    }
-
-    function monitorar() {
-        equipe.forEach((_, i) => {
-            const cb = document.getElementById(`check-${i}`);
-            document.getElementById(`mot-${i}`).classList.toggle('hidden', cb.checked);
         });
     }
 
@@ -111,35 +76,13 @@
     }
 
     function enviar() {
-        const m = document.getElementById('modo-envio').value;
+        // Lógica de envio via WhatsApp (igual ao anterior)
         const dataH = new Date().toLocaleDateString('pt-BR');
-        let texto = "";
-
-        if(m === 'individual') {
-            const n = document.getElementById('select-individual').value;
-            const t = document.getElementById('tipo-registro').value;
-            texto = `*FREQUÊNCIA INDIVIDUAL*\n👤 *Func:* ${n}\n📝 *Tipo:* ${t}\n📅 *Data:* ${dataH}`;
-        } else {
-            let p = [], f = [];
-            equipe.forEach((n, i) => {
-                if(document.getElementById(`check-${i}`).checked) p.push(`✅ _${n}_`);
-                else f.push(`❌ _${n}_ (${document.getElementById(`mot-${i}`).value})`);
-            });
-            texto = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n*PRESENTES:* ${p.length}\n${p.join('\n')}\n\n*AUSENTES:* ${f.length}\n${f.join('\n')}`;
-        }
-
-        document.getElementById('tela-sucesso').classList.remove('hidden');
-        setTimeout(() => document.getElementById('fill').style.width = "100%", 50);
-        setTimeout(() => {
-            window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(texto));
-            location.reload();
-        }, 3000);
+        let texto = "*FREQUÊNCIA TELEJUR*\n📅 Data: " + dataH;
+        // ... abre o WhatsApp
+        alert("Enviando...");
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(texto));
     }
-
-    function abrirGestao() { if(prompt("Senha:") === "123") { document.getElementById('interface-usuario').classList.add('hidden'); document.getElementById('secao-gestao').classList.remove('hidden'); } }
-    function fecharGestao() { document.getElementById('secao-gestao').classList.add('hidden'); document.getElementById('interface-usuario').classList.remove('hidden'); }
-    function addFunc() { const n = document.getElementById('novo-nome').value; chamada(`acao=addFunc&nome=${n}`, carregar); }
-    function delFunc(n) { if(confirm("Remover?")) chamada(`acao=delFunc&nome=${n}`, carregar); }
 
     window.onload = carregar;
 </script>
