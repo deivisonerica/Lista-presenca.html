@@ -8,22 +8,27 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
         h2 { color: #075E54; text-align: center; margin-bottom: 20px; }
-        .btn-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 20px; background: none; border: none; }
+        .btn-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 22px; background: none; border: none; }
+        
+        /* Cards de Status */
         .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
         .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
         .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
         .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
-        .nome-func { font-size: 14px; font-weight: 600; }
-        select { border-radius: 8px; border: 1px solid #ccc; padding: 5px; font-size: 12px; }
+        
+        /* Itens da Lista */
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
+        .nome-func { font-size: 14px; font-weight: 600; color: #333; }
+        select { border-radius: 8px; border: 1px solid #ccc; padding: 6px; font-size: 12px; background: white; }
+        
         .hidden { display: none; }
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
-        /* Modal Admin */
-        #modal-admin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; padding: 20px; box-sizing: border-box; }
-        .admin-row { display: flex; gap: 5px; margin-bottom: 15px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-        .btn-add { background: #25D366; color: white; border: none; padding: 10px; border-radius: 8px; }
-        .btn-del { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
+
+        /* MODAL ADMIN COM ROLAGEM */
+        #modal-admin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .header-admin { position: sticky; top: -20px; background: white; padding: 20px 0 10px 0; border-bottom: 2px solid #f0f2f5; z-index: 101; margin-bottom: 10px; }
+        .btn-add { background: #25D366; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; font-size: 20px; cursor: pointer; }
+        .btn-del { background: #ffebeb; color: #d9534f; border: 1px solid #d9534f; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -39,24 +44,26 @@
         <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
     </div>
 
-    <div id="loader" style="text-align: center;">⌛ Carregando...</div>
+    <div id="loader" style="text-align: center; padding: 20px;">⌛ Carregando dados...</div>
     <div id="corpo-lista"></div>
+
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
 </div>
 
 <div id="modal-admin" class="hidden">
-    <div style="display:flex; justify-content: space-between; align-items: center;">
-        <h3>Gerenciar Equipe</h3>
-        <button onclick="fecharAdmin()" style="border:none; background:none; font-size:25px;">✕</button>
-    </div>
-    
-    <div class="admin-row">
-        <input type="text" id="novo-nome" placeholder="Nome do funcionário">
-        <button class="btn-add" onclick="salvarFuncionario()">Adicionar</button>
+    <div class="header-admin">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #075E54;">Gerenciar Equipe</h3>
+            <button onclick="fecharAdmin()" style="border:none; background:none; font-size:30px; color: #666; cursor: pointer;">✕</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="novo-nome" placeholder="Novo nome..." style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+            <button class="btn-add" onclick="salvarFuncionario()">+</button>
+        </div>
     </div>
 
     <div id="lista-admin"></div>
-</div>
+    <div style="height: 60px;"></div> </div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
@@ -69,7 +76,8 @@
             renderizarLista();
             renderizarAdmin();
             delete window[id];
-            document.getElementById(id).remove();
+            const el = document.getElementById(id);
+            if(el) el.remove();
         };
         const s = document.createElement('script');
         s.id = id;
@@ -106,24 +114,25 @@
         equipe.forEach(nome => {
             adminDiv.innerHTML += `
                 <div class="item-lista">
-                    <span>${nome}</span>
-                    <button class="btn-del" onclick="removerFuncionario('${nome}')">Excluir</button>
+                    <span style="font-size: 14px;">${nome}</span>
+                    <button class="btn-del" onclick="removerFuncionario('${nome}')">EXCLUIR</button>
                 </div>`;
         });
     }
 
     async function salvarFuncionario() {
-        const nome = document.getElementById('novo-nome').value;
+        const input = document.getElementById('novo-nome');
+        const nome = input.value.trim();
         if(!nome) return;
-        document.getElementById('loader').classList.remove('hidden');
+        input.disabled = true;
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'add', nome: nome}) });
-        document.getElementById('novo-nome').value = "";
+        input.value = "";
+        input.disabled = false;
         buscarNomes();
     }
 
     async function removerFuncionario(nome) {
-        if(!confirm("Excluir "+nome+"?")) return;
-        document.getElementById('loader').classList.remove('hidden');
+        if(!confirm("Remover " + nome + " da lista?")) return;
         await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'del', nome: nome}) });
         buscarNomes();
     }
