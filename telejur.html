@@ -9,15 +9,19 @@
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
         h2 { color: #075E54; text-align: center; margin-bottom: 20px; }
         .btn-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 22px; background: none; border: none; }
+        
         .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
         .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
         .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
         .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
+        
         .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
         .nome-func { font-size: 14px; font-weight: 600; color: #333; }
         select { border-radius: 8px; border: 1px solid #ccc; padding: 6px; font-size: 12px; background: white; }
+        
         .hidden { display: none; }
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+
         #modal-admin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto; }
         .header-admin { position: sticky; top: -20px; background: white; padding: 20px 0 10px 0; border-bottom: 2px solid #f0f2f5; z-index: 101; margin-bottom: 10px; }
         .btn-add { background: #25D366; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; font-size: 20px; cursor: pointer; }
@@ -37,7 +41,7 @@
         <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
     </div>
 
-    <div id="loader" style="text-align: center; padding: 20px;">⌛ Carregando equipe...</div>
+    <div id="loader" style="text-align: center; padding: 20px;">⌛ Carregando dados...</div>
     <div id="corpo-lista"></div>
 
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
@@ -50,7 +54,7 @@
             <button onclick="fecharAdmin()" style="border:none; background:none; font-size:30px; color: #666; cursor: pointer;">✕</button>
         </div>
         <div style="display: flex; gap: 8px;">
-            <input type="text" id="novo-nome" placeholder="Nome do funcionário" style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+            <input type="text" id="novo-nome" placeholder="Novo nome..." style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
             <button class="btn-add" onclick="salvarFuncionario()">+</button>
         </div>
     </div>
@@ -59,13 +63,12 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
+    const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec](https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec)"; 
     let equipe = [];
 
     function buscarNomes() {
         const id = 'cb_' + Date.now();
         window[id] = (data) => {
-            // Garante ordenação também no recebimento
             equipe = data.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
             renderizarLista();
             renderizarAdmin();
@@ -151,20 +154,32 @@
     function enviarWhatsapp() {
         const dataH = new Date().toLocaleDateString('pt-BR');
         let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
+        
         equipe.forEach((nome, i) => {
             const cb = document.getElementById(`check-${i}`);
-            if (cb && cb.checked) cat.planta.push(`_${nome}_`);
-            else if (cb) {
+            // Formatação monoespaçada para os nomes
+            const nomeFormatado = "```" + nome + "```";
+            
+            if (cb && cb.checked) {
+                cat.planta.push(`• ${nomeFormatado}`);
+            } else if (cb) {
                 const mot = document.getElementById(`motivo-${i}`).value;
-                if (mot === "Férias") cat.ferias.push(`_${nome}_`);
-                else if (mot === "Atestado") cat.atestado.push(`_${nome}_`);
-                else if (mot === "Em viagem") cat.viagem.push(`_${nome}_`);
-                else if (mot === "Falta justificada") cat.just.push(`_${nome}_`);
-                else cat.falta.push(`_${nome}_`);
+                if (mot === "Férias") cat.ferias.push(nomeFormatado);
+                else if (mot === "Atestado") cat.atestado.push(nomeFormatado);
+                else if (mot === "Em viagem") cat.viagem.push(nomeFormatado);
+                else if (mot === "Falta justificada") cat.just.push(nomeFormatado);
+                else cat.falta.push(nomeFormatado);
             }
         });
-        const msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n✅ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n✔️ *Férias:* ${cat.ferias.join(', ') || '0'}\n✔️ *Atestado:* ${cat.atestado.join(', ') || '0'}\n✔️ *Falta justificada:* ${cat.just.join(', ') || '0'}\n✔️ *Faltas:* ${cat.falta.join(', ') || '0'}`;
-        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
+
+        const msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n` +
+                    `✅ *EFETIVO NA PLANTA: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n` +
+                    `📌 *Férias:* ${cat.ferias.join(', ') || '0'}\n` +
+                    `📌 *Atestado:* ${cat.atestado.join(', ') || '0'}\n` +
+                    `📌 *Falta justificada:* ${cat.just.join(', ') || '0'}\n` +
+                    `📌 *Faltas:* ${cat.falta.join(', ') || '0'}`;
+
+        window.open("[https://api.whatsapp.com/send?text=](https://api.whatsapp.com/send?text=)" + encodeURIComponent(msg));
     }
 
     window.onload = buscarNomes;
