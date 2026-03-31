@@ -3,46 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequência Telejur - Juruti</title>
+    <title>Frequência Telejur</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 p-4 font-sans">
+<body class="bg-slate-100 p-4 font-sans text-slate-800">
 
-<div class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl min-h-[500px] flex flex-col relative overflow-hidden">
+<div class="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-xl min-h-[550px] flex flex-col relative overflow-hidden">
     
     <div id="tela-sucesso" class="hidden absolute inset-0 bg-white z-50 flex flex-col items-center justify-center text-center p-6">
-        <h1 class="text-6xl mb-4">✅</h1>
-        <h2 class="text-xl font-bold">Enviado!</h2>
+        <h1 class="text-7xl mb-4">✅</h1>
+        <h2 class="text-2xl font-bold text-slate-700">Enviado!</h2>
+        <p class="text-sm text-slate-400 mt-2">Atualizando lista...</p>
     </div>
 
     <header class="text-center mb-6">
         <h1 class="text-xl font-black text-blue-800 uppercase">Frequência Telejur</h1>
-        <p class="text-[10px] font-bold text-slate-400">UNIDADE JURUTI</p>
+        <p class="text-xs font-bold text-slate-400">UNIDADE JURUTI</p>
     </header>
 
-    <div id="interface-usuario" class="space-y-4">
-        <select id="modo-envio" onchange="alternarModo()" class="w-full p-4 bg-slate-50 border rounded-2xl font-bold outline-none">
+    <div id="interface-usuario" class="space-y-4 flex-grow flex flex-col">
+        <select id="modo-envio" onchange="alternarModo()" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold outline-none">
             <option value="geral">Lista Geral (Equipe)</option>
             <option value="individual">Individual</option>
         </select>
 
-        <div id="campos-geral">
-            <div id="corpo-lista" class="border rounded-2xl p-2 max-h-[300px] overflow-y-auto bg-slate-50">
-                <p class="text-center p-10 text-slate-400 font-bold">Carregando equipe...</p>
+        <div id="campos-geral" class="flex-grow">
+            <div id="corpo-lista" class="border rounded-2xl p-2 max-h-[350px] overflow-y-auto space-y-1 bg-slate-50">
+                <p class="text-center p-10 text-slate-400 font-bold animate-pulse">Carregando nomes...</p>
             </div>
         </div>
 
-        <div id="campos-individual" class="hidden space-y-4">
-            <select id="select-individual" class="w-full p-4 border rounded-2xl font-bold bg-white"></select>
+        <div id="campos-individual" class="hidden">
+            <select id="select-individual" class="w-full p-4 border-2 rounded-2xl font-bold bg-white mb-4"></select>
+            <select id="tipo-reg" class="w-full p-4 border-2 border-blue-100 rounded-2xl font-bold bg-blue-50 text-blue-700">
+                <option>🏁 Registro de Chegada</option>
+                <option>🍴 Início Almoço</option>
+                <option>🍱 Saída Almoço</option>
+                <option>🚪 Final de Turno</option>
+            </select>
         </div>
 
-        <button onclick="enviar()" class="w-full bg-green-500 text-white font-black py-5 rounded-2xl shadow-lg uppercase mt-4">🚀 Enviar Frequência</button>
+        <button onclick="enviar()" class="w-full bg-green-500 hover:bg-green-600 text-white font-black py-5 rounded-2xl shadow-lg transition-all active:scale-95 uppercase mt-4">🚀 Enviar para WhatsApp</button>
     </div>
 </div>
 
 <script>
-    // IMPORTANTE: Substitua pela sua nova URL após implantar o script acima
-    const SCRIPT_URL = "SUA_NOVA_URL_AQUI"; 
+    // 1. COLE SUA URL ABAIXO
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec";
+    let equipe = [];
 
     function chamada(params, cb) {
         const id = 'jsonp_' + Date.now();
@@ -54,6 +62,8 @@
 
     function carregar() {
         chamada("acao=lerEquipe", (data) => {
+            if(data.erro) return alert("Erro: " + data.erro);
+            equipe = data;
             const lista = document.getElementById('corpo-lista');
             const sel = document.getElementById('select-individual');
             lista.innerHTML = ""; sel.innerHTML = "";
@@ -76,12 +86,28 @@
     }
 
     function enviar() {
-        // Lógica de envio via WhatsApp (igual ao anterior)
+        const m = document.getElementById('modo-envio').value;
         const dataH = new Date().toLocaleDateString('pt-BR');
-        let texto = "*FREQUÊNCIA TELEJUR*\n📅 Data: " + dataH;
-        // ... abre o WhatsApp
-        alert("Enviando...");
-        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(texto));
+        let txt = "";
+
+        if(m === 'individual') {
+            const n = document.getElementById('select-individual').value;
+            const t = document.getElementById('tipo-reg').value;
+            txt = `*FREQUÊNCIA INDIVIDUAL*\n👤 *Func:* ${n}\n📝 *Tipo:* ${t}\n📅 *Data:* ${dataH}`;
+        } else {
+            let p = [], f = [];
+            equipe.forEach((n, i) => {
+                if(document.getElementById(`check-${i}`).checked) p.push(`✅ _${n}_`);
+                else f.push(`❌ _${n}_ (Falta)`);
+            });
+            txt = `*LISTA DE FREQUÊNCIA - TELEJUR*\n📅 *Data:* ${dataH}\n\n*PRESENTES:* ${p.length}\n${p.join('\n')}\n\n*AUSENTES:* ${f.length}\n${f.join('\n')}`;
+        }
+
+        document.getElementById('tela-sucesso').classList.remove('hidden');
+        setTimeout(() => {
+            window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(txt));
+            location.reload();
+        }, 2000);
     }
 
     window.onload = carregar;
