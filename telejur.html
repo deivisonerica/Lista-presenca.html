@@ -8,61 +8,95 @@
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
         h2 { color: #075E54; text-align: center; margin-bottom: 20px; font-size: 22px; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
-        .nome-func { font-size: 14px; color: #333; font-weight: bold; }
+        .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+        .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
+        .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
+        .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
+        .nome-func { font-size: 14px; color: #333; font-weight: 600; }
+        input[type="checkbox"] { transform: scale(1.4); accent-color: #25D366; cursor: pointer; }
+        select { border-radius: 8px; border: 1px solid #ccc; padding: 5px; font-size: 12px; background: white; }
         .hidden { display: none; }
-        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+        .loading { text-align: center; color: #666; padding: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h2>📋 Frequência Telejur</h2>
-    <div id="corpo-lista" style="text-align: center; color: gray; padding: 20px;">
-        ⌛ Carregando equipe...
+
+    <div class="card-status">
+        <div class="status-box"><span id="count-presenca">0</span><label>Presentes</label></div>
+        <div class="status-box"><span id="count-falta">0</span><label>Ausentes</label></div>
     </div>
+
+    <div id="corpo-lista" class="loading">⌛ Carregando equipe da planilha...</div>
+
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
 </div>
 
 <script>
-    // COLE AQUI A URL QUE VOCÊ COPIOU DO GOOGLE SCRIPT
-    const SCRIPT_URL = "SUA_URL_AQUI"; 
+    // URL configurada com o seu link oficial
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
 
     let equipe = [];
 
     function buscarEquipe() {
-        const id = 'jsonp_' + Date.now();
+        const id = 'cb_' + Date.now();
         window[id] = (data) => {
             equipe = data;
             const listaDiv = document.getElementById('corpo-lista');
             listaDiv.innerHTML = "";
+            
             data.forEach((nome, i) => {
                 listaDiv.innerHTML += `
                     <div class="item-lista">
-                        <span class="nome-func">${nome}</span>
-                        <input type="checkbox" id="check-${i}" checked style="transform: scale(1.3);">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" id="check-${i}" checked onchange="atualizar()">
+                            <span class="nome-func">${nome}</span>
+                        </div>
+                        <select id="motivo-${i}" class="hidden" onchange="atualizar()">
+                            <option value="Falta">Falta</option>
+                            <option value="Atestado">Atestado</option>
+                            <option value="Férias">Férias</option>
+                            <option value="Folga">Folga</option>
+                        </select>
                     </div>`;
             });
+            atualizar();
             delete window[id];
             document.getElementById(id).remove();
         };
+        
         const s = document.createElement('script');
         s.id = id;
         s.src = `${SCRIPT_URL}?callback=${id}`;
         document.body.appendChild(s);
     }
 
+    function atualizar() {
+        let p = 0, f = 0;
+        equipe.forEach((_, i) => {
+            const cb = document.getElementById(`check-${i}`);
+            const sel = document.getElementById(`motivo-${i}`);
+            if (cb.checked) { p++; sel.classList.add('hidden'); } 
+            else { f++; sel.classList.remove('hidden'); }
+        });
+        document.getElementById('count-presenca').innerText = p;
+        document.getElementById('count-falta').innerText = f;
+    }
+
     function enviarWhatsapp() {
-        const data = new Date().toLocaleDateString('pt-BR');
-        let presentes = [];
-        let faltas = [];
+        const dataH = new Date().toLocaleDateString('pt-BR');
+        let pres = [], aus = [];
 
         equipe.forEach((nome, i) => {
-            if (document.getElementById(`check-${i}`).checked) presentes.push(`✅ _${nome}_`);
-            else faltas.push(`❌ _${nome}_`);
+            if (document.getElementById(`check-${i}`).checked) pres.push(`✅ _${nome}_`);
+            else aus.push(`❌ _${nome}_ (${document.getElementById(`motivo-${i}`).value})`);
         });
 
-        const msg = `*FREQUÊNCIA TELEJUR*\n📅 Data: ${data}\n\n*PRESENTES:*\n${presentes.join('\n')}\n\n*FALTAS:*\n${faltas.join('\n')}`;
+        const msg = `*FREQUÊNCIA TELEJUR*\n📅 Data: ${dataH}\n\n*PRESENTES:* ${pres.length}\n${pres.join('\n')}\n\n*AUSENTES:* ${aus.length}\n${aus.join('\n')}`;
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
 
