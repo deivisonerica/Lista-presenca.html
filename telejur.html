@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequência Telejur</title>
+    <title>Frequência Telejur - Oficial</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
@@ -12,13 +12,16 @@
         .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
         .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
         .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
-        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; }
+        .item-info { display: flex; align-items: center; gap: 10px; }
+        .item-info input { transform: scale(1.3); cursor: pointer; }
         .nome-func { font-size: 14px; color: #333; font-weight: 600; }
-        input[type="checkbox"] { transform: scale(1.4); accent-color: #25D366; cursor: pointer; }
-        select { border-radius: 8px; border: 1px solid #ccc; padding: 5px; font-size: 12px; background: white; }
+        select { width: 100%; font-size: 14px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; background: #fff; margin-bottom: 10px; }
         .hidden { display: none; }
+        .btn-gps { background-color: #6c757d; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; width: 100%; font-size: 14px; text-align: center; }
         button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
-        .loading { text-align: center; color: #666; padding: 20px; font-weight: bold; }
+        .label-peq { font-size: 12px; font-weight: bold; color: #075E54; display: block; margin-bottom: 5px; }
+        #loader { text-align: center; padding: 20px; color: #666; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -26,87 +29,167 @@
 <div class="container">
     <h2>📋 Frequência Telejur</h2>
 
-    <div class="card-status">
-        <div class="status-box"><span id="count-presenca">0</span><label>Presentes</label></div>
-        <div class="status-box"><span id="count-falta">0</span><label>Ausentes</label></div>
+    <label class="label-peq">MODO DE ENVIO:</label>
+    <select id="modo-envio" onchange="alternarModo()">
+        <option value="geral">Lista Geral (Equipe)</option>
+        <option value="individual">Formulário Individual (Validar Local)</option>
+    </select>
+
+    <div id="status-gps" class="btn-gps hidden">⌛ Localizando...</div>
+
+    <div id="campos-individual" class="hidden">
+        <label class="label-peq">FUNCIONÁRIO:</label>
+        <select id="select-individual"></select>
     </div>
 
-    <div id="corpo-lista" class="loading">⌛ Carregando funcionários...</div>
+    <div id="campos-geral">
+        <div class="card-status">
+            <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
+            <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
+            <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+            <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
+        </div>
+        <div id="loader">⌛ Carregando equipe da planilha...</div>
+        <div id="corpo-lista"></div>
+    </div>
 
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
 </div>
 
 <script>
-    // Sua URL oficial integrada
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
-
     let equipe = [];
+    let dadosLoc = { link: "", enderecoFormatado: "", unidadeMsg: "", statusMsg: "", hora: "" };
 
-    function buscarEquipe() {
+    const pontosAlcoa = [
+        { nome: "ALCOA - PORTO", lat: -2.1677, lon: -56.1017 },
+        { nome: "ALCOA - BENEFICIAMENTO", lat: -2.4488, lon: -56.1708 }
+    ];
+
+    function buscarNomes() {
         const id = 'cb_' + Date.now();
         window[id] = (data) => {
             equipe = data;
-            const listaDiv = document.getElementById('corpo-lista');
-            listaDiv.innerHTML = "";
-            
-            if (!data || data.length === 0) {
-                listaDiv.innerHTML = "Nenhum nome encontrado na aba 'Funcionarios'.";
-                return;
-            }
-
-            data.forEach((nome, i) => {
-                listaDiv.innerHTML += `
-                    <div class="item-lista">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <input type="checkbox" id="check-${i}" checked onchange="atualizar()">
-                            <span class="nome-func">${nome}</span>
-                        </div>
-                        <select id="motivo-${i}" class="hidden" onchange="atualizar()">
-                            <option value="Falta">Falta</option>
-                            <option value="Atestado">Atestado</option>
-                            <option value="Férias">Férias</option>
-                            <option value="Folga">Folga</option>
-                        </select>
-                    </div>`;
-            });
-            atualizar();
+            renderizarLista();
             delete window[id];
             document.getElementById(id).remove();
         };
-        
         const s = document.createElement('script');
         s.id = id;
         s.src = `${SCRIPT_URL}?callback=${id}`;
         document.body.appendChild(s);
     }
 
-    function atualizar() {
-        let p = 0, f = 0;
+    function renderizarLista() {
+        document.getElementById('loader').classList.add('hidden');
+        const listaDiv = document.getElementById('corpo-lista');
+        const selInd = document.getElementById('select-individual');
+        listaDiv.innerHTML = ""; selInd.innerHTML = "";
+
+        equipe.forEach((nome, i) => {
+            listaDiv.innerHTML += `
+                <div class="item-lista">
+                    <div class="item-info">
+                        <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
+                        <span class="nome-func">${nome}</span>
+                    </div>
+                    <select id="motivo-${i}" class="hidden" style="width: auto;" onchange="monitorar()">
+                        <option value="Falta sem justificativa">Falta sem justificativa</option>
+                        <option value="Atestado">Atestado</option>
+                        <option value="Férias">Férias</option>
+                        <option value="Em viagem">Em viagem</option>
+                        <option value="Falta justificada">Falta justificada</option>
+                    </select>
+                </div>`;
+            selInd.innerHTML += `<option value="${nome}">${nome}</option>`;
+        });
+        monitorar();
+    }
+
+    function alternarModo() {
+        const modo = document.getElementById('modo-envio').value;
+        document.getElementById('campos-geral').classList.toggle('hidden', modo === 'individual');
+        document.getElementById('campos-individual').classList.toggle('hidden', modo === 'geral');
+        if (modo === 'individual') {
+            document.getElementById('status-gps').classList.remove('hidden');
+            obterGps();
+        } else {
+            document.getElementById('status-gps').classList.add('hidden');
+        }
+    }
+
+    async function obterGps() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude; const lon = pos.coords.longitude;
+            dadosLoc.hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            dadosLoc.link = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            let planta = "FORA DA PLANTA";
+            pontosAlcoa.forEach(p => {
+                const d = Math.sqrt(Math.pow(lat - p.lat, 2) + Math.pow(lon - p.lon, 2));
+                if (d < 0.008) planta = p.nome;
+            });
+
+            dadosLoc.unidadeMsg = planta;
+            dadosLoc.statusMsg = planta === "FORA DA PLANTA" ? "Ausente da planta" : "Presente na Planta";
+            const st = document.getElementById('status-gps');
+            st.innerHTML = `📍 ${planta} - ${dadosLoc.hora}`;
+            st.style.backgroundColor = planta === "FORA DA PLANTA" ? "#d9534f" : "#075E54";
+        }, null, { enableHighAccuracy: true });
+    }
+
+    function monitorar() {
+        let f=0, a=0, j=0, s=0;
         equipe.forEach((_, i) => {
             const cb = document.getElementById(`check-${i}`);
             const sel = document.getElementById(`motivo-${i}`);
-            if (cb && cb.checked) { p++; sel.classList.add('hidden'); } 
-            else if (cb) { f++; sel.classList.remove('hidden'); }
+            if (cb && !cb.checked) {
+                sel.classList.remove('hidden');
+                if (sel.value === "Férias") f++;
+                else if (sel.value === "Atestado") a++;
+                else if (sel.value === "Falta justificada") j++;
+                else s++;
+            } else if (cb) sel.classList.add('hidden');
         });
-        document.getElementById('count-presenca').innerText = p;
-        document.getElementById('count-falta').innerText = f;
+        document.getElementById('count-ferias').innerText = f;
+        document.getElementById('count-atestado').innerText = a;
+        document.getElementById('count-faltajust').innerText = j;
+        document.getElementById('count-faltas').innerText = s;
     }
 
     function enviarWhatsapp() {
+        const modo = document.getElementById('modo-envio').value;
         const dataH = new Date().toLocaleDateString('pt-BR');
-        let pres = [], aus = [];
+        let msg = "";
 
-        equipe.forEach((nome, i) => {
-            const cb = document.getElementById(`check-${i}`);
-            if (cb && cb.checked) pres.push(`✅ _${nome}_`);
-            else if (cb) aus.push(`❌ _${nome}_ (${document.getElementById(`motivo-${i}`).value})`);
-        });
-
-        const msg = `*FREQUÊNCIA TELEJUR*\n📅 Data: ${dataH}\n\n*PRESENTES:* ${pres.length}\n${pres.join('\n')}\n\n*AUSENTES:* ${aus.length}\n${aus.join('\n')}`;
+        if (modo === "individual") {
+            const nome = document.getElementById('select-individual').value;
+            msg = `*RELATÓRIO DE FREQUÊNCIA INDIVIDUAL*\n\n✅ *Empresa: Telejur*\n📅 Data: ${dataH}\n⏰ Hora: ${dadosLoc.hora}\n👤 Funcionário: _${nome}_\n\n🏢 *Unidade:* ${dadosLoc.unidadeMsg}\n📊 *Status:* ${dadosLoc.statusMsg}\n🔗 *Link GPS:* ${dadosLoc.link}`;
+        } else {
+            let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [] };
+            equipe.forEach((nome, i) => {
+                const cb = document.getElementById(`check-${i}`);
+                if (cb.checked) cat.planta.push(`_${nome}_`);
+                else {
+                    const mot = document.getElementById(`motivo-${i}`).value;
+                    if (mot === "Férias") cat.ferias.push(`_${nome}_`);
+                    else if (mot === "Atestado") cat.atestado.push(`_${nome}_`);
+                    else if (mot === "Em viagem") cat.viagem.push(`_${nome}_`);
+                    else if (mot === "Falta justificada") cat.just.push(`_${nome}_`);
+                    else cat.falta.push(`_${nome}_`);
+                }
+            });
+            msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n✔️ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n` +
+                  `✔️ *Férias:* ${cat.ferias.join(', ') || '0'}\n` +
+                  `✔️ *Atestado:* ${cat.atestado.join(', ') || '0'}\n` +
+                  `✔️ *Falta justificada:* ${cat.just.join(', ') || '0'}\n` +
+                  `✔️ *Faltas:* ${cat.falta.join(', ') || '0'}`;
+        }
         window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
     }
 
-    window.onload = buscarEquipe;
+    window.onload = buscarNomes;
 </script>
 </body>
 </html>
