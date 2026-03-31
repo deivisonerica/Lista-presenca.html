@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Frequência Telejur - Oficial</title>
+    <title>Frequência Telejur</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
@@ -31,13 +31,13 @@
         <div class="status-box"><span id="count-falta">0</span><label>Ausentes</label></div>
     </div>
 
-    <div id="corpo-lista" class="loading">⌛ Carregando equipe da planilha...</div>
+    <div id="corpo-lista" class="loading">⌛ Carregando funcionários...</div>
 
     <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
 </div>
 
 <script>
-    // URL configurada com o seu link oficial
+    // Sua URL oficial integrada
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
 
     let equipe = [];
@@ -49,6 +49,11 @@
             const listaDiv = document.getElementById('corpo-lista');
             listaDiv.innerHTML = "";
             
+            if (!data || data.length === 0) {
+                listaDiv.innerHTML = "Nenhum nome encontrado na aba 'Funcionarios'.";
+                return;
+            }
+
             data.forEach((nome, i) => {
                 listaDiv.innerHTML += `
                     <div class="item-lista">
@@ -80,8 +85,8 @@
         equipe.forEach((_, i) => {
             const cb = document.getElementById(`check-${i}`);
             const sel = document.getElementById(`motivo-${i}`);
-            if (cb.checked) { p++; sel.classList.add('hidden'); } 
-            else { f++; sel.classList.remove('hidden'); }
+            if (cb && cb.checked) { p++; sel.classList.add('hidden'); } 
+            else if (cb) { f++; sel.classList.remove('hidden'); }
         });
         document.getElementById('count-presenca').innerText = p;
         document.getElementById('count-falta').innerText = f;
@@ -92,8 +97,9 @@
         let pres = [], aus = [];
 
         equipe.forEach((nome, i) => {
-            if (document.getElementById(`check-${i}`).checked) pres.push(`✅ _${nome}_`);
-            else aus.push(`❌ _${nome}_ (${document.getElementById(`motivo-${i}`).value})`);
+            const cb = document.getElementById(`check-${i}`);
+            if (cb && cb.checked) pres.push(`✅ _${nome}_`);
+            else if (cb) aus.push(`❌ _${nome}_ (${document.getElementById(`motivo-${i}`).value})`);
         });
 
         const msg = `*FREQUÊNCIA TELEJUR*\n📅 Data: ${dataH}\n\n*PRESENTES:* ${pres.length}\n${pres.join('\n')}\n\n*AUSENTES:* ${aus.length}\n${aus.join('\n')}`;
