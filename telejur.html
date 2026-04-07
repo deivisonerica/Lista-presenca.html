@@ -2,147 +2,173 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>Frota Telejur</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequência Telejur</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; padding: 15px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); position: relative; }
+        h2 { color: #075E54; text-align: center; margin-bottom: 20px; }
+        .btn-admin { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 22px; background: none; border: none; }
+        .card-status { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+        .status-box { background: #f8f9fa; padding: 8px; border-radius: 10px; border: 1px solid #dee2e6; text-align: center; }
+        .status-box span { display: block; font-size: 16px; font-weight: bold; color: #075E54; }
+        .status-box label { font-size: 9px; text-transform: uppercase; color: #6c757d; font-weight: bold; }
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 12px 5px; border-bottom: 1px solid #f1f1f1; }
+        .nome-func { font-size: 14px; font-weight: 600; color: #333; }
+        select { border-radius: 8px; border: 1px solid #ccc; padding: 6px; font-size: 12px; background: white; }
+        .hidden { display: none; }
+        button.enviar { width: 100%; background-color: #25D366; color: white; border: none; padding: 16px; font-size: 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-top: 20px; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2); }
+        #modal-admin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .header-admin { position: sticky; top: -20px; background: white; padding: 20px 0 10px 0; border-bottom: 2px solid #f0f2f5; z-index: 101; margin-bottom: 10px; }
+        .btn-add { background: #25D366; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; font-size: 20px; cursor: pointer; }
+        .btn-del { background: #ffebeb; color: #d9534f; border: 1px solid #d9534f; padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-slate-100 pb-10 font-sans text-slate-800">
-    <header class="bg-blue-800 text-white shadow-lg sticky top-0 z-50">
-        <div class="p-4 text-center border-b border-blue-700"><h1 class="font-bold text-lg uppercase">Frota Telejur</h1></div>
-        <div class="flex justify-around bg-blue-900">
-            <button onclick="mudarTela('saida')" id="btn-saida" class="w-1/2 py-4 font-black text-xs border-b-4 border-white transition-all">1. SAÍDA</button>
-            <button onclick="mudarTela('retorno')" id="btn-retorno" class="w-1/2 py-4 font-black text-xs opacity-50 transition-all">2. CHEGADA</button>
-        </div>
-    </header>
+<body>
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
-        <div id="tela-saida" class="space-y-4">
-            <section class="bg-white rounded-3xl shadow-xl border p-6 space-y-5">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Veículo (TAG)</label>
-                    <select id="tag_select" onchange="resetTag()" class="w-full border-2 border-blue-50 rounded-2xl p-4 font-black text-blue-700 bg-blue-50 outline-none text-lg">
-                        <option value="" disabled selected>ESCOLHA A TAG...</option>
-                        <option value="TJUR 04">TJUR 04</option><option value="TJUR 06">TJUR 06</option>
-                        <option value="TJUR 07">TJUR 07</option><option value="TJUR 08">TJUR 08</option>
-                        <option value="TJUR 09">TJUR 09</option><option value="TJUR 10">TJUR 10</option>
-                        <option value="TJUR 13">TJUR 13</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <input type="text" id="veiculo_input" readonly placeholder="VEÍCULO" class="bg-slate-50 border p-3 rounded-xl text-xs font-bold text-center">
-                    <input type="text" id="placa_input" readonly placeholder="PLACA" class="bg-slate-50 border p-3 rounded-xl text-xs font-bold text-center">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Motorista</label>
-                    <select id="nome_condutor" onchange="validarSaida()" class="w-full border-2 border-slate-100 rounded-2xl p-4 font-bold bg-white">
-                        <option value="" disabled selected>Quem vai dirigir?</option>
-                        <option>ADRIANO NASCIMENTO</option><option>FRACIVALDO COSTA</option><option>JOELCINEI GUIMARÃES</option><option>FRACINILDO TEIXEIRA</option><option>EZEQUIEL SILVA</option><option>REGINALDO PEREIRA</option><option>LAFAIETE BATISTA</option><option>WALTER GONÇALVES</option><option>AUSENTE</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Identificação do Trajeto</label>
-                    <input type="text" id="id_condutor" readonly class="w-full border-2 border-slate-100 rounded-2xl p-4 text-center font-black text-blue-600 bg-slate-50 uppercase" value="AGUARDANDO MOTORISTA">
-                </div>
-                <div class="grid grid-cols-2 gap-3 border-t pt-5">
-                    <div><label class="block text-[10px] font-bold text-green-600 uppercase mb-1">KM Inicial</label><input type="tel" id="km_inicial" oninput="calc()" placeholder="000000" class="w-full border-2 border-green-50 rounded-2xl p-4 text-2xl font-black text-center text-green-700 bg-green-50"></div>
-                    <div><label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Próx. Troca</label><input type="tel" id="km_troca" oninput="calc()" placeholder="000000" class="w-full border-2 border-slate-100 rounded-2xl p-4 text-2xl font-black text-center"></div>
-                </div>
-                <div class="flex items-center justify-between px-2">
-                    <select id="tipo_oleo" class="text-[10px] font-bold bg-slate-200 px-3 py-1 rounded-full uppercase"><option>5w30</option><option>5w40</option><option>10w40</option><option selected>15w40</option><option>20w50</option></select>
-                    <div id="res_resta" class="font-black text-blue-600 text-sm">RESTAM: -- KM</div>
-                </div>
-                <button id="btn_enviar" onclick="enviar('inicio')" disabled class="w-full bg-slate-300 text-white font-black py-5 rounded-2xl uppercase text-lg shadow-lg">Registrar Saída</button>
-            </section>
-        </div>
+<div class="container">
+    <button class="btn-admin" onclick="abrirAdmin()">⚙️</button>
+    <h2>📋 Frequência Telejur</h2>
 
-        <div id="tela-retorno" class="hidden space-y-4">
-            <section class="bg-white rounded-3xl shadow-xl border p-6 space-y-5">
-                <label class="block text-xs font-black text-center uppercase text-blue-800">KM na Chegada</label>
-                <input type="tel" id="km_final" oninput="calc()" placeholder="000000" class="w-full border-2 border-blue-100 rounded-3xl p-6 text-5xl font-black text-center text-blue-900 bg-blue-50 outline-none">
-                <div id="res_resta_fim" class="bg-blue-800 text-white p-4 rounded-2xl text-center font-black text-lg uppercase">Restam: -- KM</div>
-                <textarea id="obs" placeholder="OBSERVAÇÕES..." class="w-full border-2 border-slate-100 rounded-2xl p-4 text-sm h-32 bg-slate-50 outline-none uppercase"></textarea>
-                <button id="btn_finalizar" onclick="enviar('fim')" class="w-full bg-blue-900 text-white font-black py-6 rounded-3xl uppercase text-xl shadow-2xl active:scale-95 transition-all">Finalizar Trajeto</button>
-            </section>
-        </div>
+    <div class="card-status">
+        <div class="status-box"><span id="count-ferias">0</span><label>Férias</label></div>
+        <div class="status-box"><span id="count-atestado">0</span><label>Atestado</label></div>
+        <div class="status-box"><span id="count-faltajust">0</span><label>F. Justif.</label></div>
+        <div class="status-box"><span id="count-faltas">0</span><label>Faltas</label></div>
     </div>
 
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbysx-IjZe54SWbmqwl2NYJEx_kiuVtakdtE-GFYE30UxwYYQhcvOuw5DViSwMixS_QIyQ/exec"; 
-        const frota = { "TJUR 04": ["Sky munck", "QFA1I50"], "TJUR 06": ["Saveiro furgão", "QUJ3E02"], "TJUR 07": ["Sky munck", "RWR3C75"], "TJUR 08": ["Caminhonete hilux", "QVE5H48"], "TJUR 09": ["Sky munck", "RXC6J04"], "TJUR 10": ["Caminhonete", "PHU1I37"], "TJUR 13": ["Caminhonete", "QVD4I38"] };
+    <div id="loader" style="text-align: center; padding: 20px;">⌛ Carregando equipe...</div>
+    <div id="corpo-lista"></div>
 
-        function mudarTela(t) { 
-            document.getElementById('tela-saida').classList.toggle('hidden', t !== 'saida'); 
-            document.getElementById('tela-retorno').classList.toggle('hidden', t !== 'retorno'); 
-            document.getElementById('btn-saida').classList.toggle('opacity-50', t !== 'saida');
-            document.getElementById('btn-retorno').classList.toggle('opacity-50', t !== 'retorno');
-            document.getElementById('btn-saida').style.borderBottomWidth = (t === 'saida') ? "4px" : "0px";
-        }
+    <button class="enviar" onclick="enviarWhatsapp()">🚀 Enviar no WhatsApp</button>
+</div>
 
-        function resetTag() {
-            const tag = document.getElementById('tag_select').value;
-            document.getElementById('veiculo_input').value = frota[tag][0];
-            document.getElementById('placa_input').value = frota[tag][1];
-            document.getElementById('nome_condutor').value = "";
-            document.getElementById('id_condutor').value = "SELECIONE O MOTORISTA";
-            document.getElementById('btn_enviar').disabled = true;
-            document.getElementById('btn_enviar').classList.replace('bg-green-600', 'bg-slate-300');
-        }
+<div id="modal-admin" class="hidden">
+    <div class="header-admin">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #075E54;">Gerenciar Equipe</h3>
+            <button onclick="fecharAdmin()" style="border:none; background:none; font-size:30px; color: #666; cursor: pointer;">✕</button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="novo-nome" placeholder="Nome do funcionário" style="flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+            <button class="btn-add" onclick="salvarFuncionario()">+</button>
+        </div>
+    </div>
+    <div id="lista-admin"></div>
+    <div style="height: 60px;"></div>
+</div>
 
-        async function validarSaida() {
-            const tag = document.getElementById('tag_select').value;
-            const idC = document.getElementById('id_condutor');
-            const btn = document.getElementById('btn_enviar');
-            if(!tag) return;
-            idC.value = "CHOCANDO DADOS...";
-            try {
-                const r = await fetch(`${scriptURL}?tag=${encodeURIComponent(tag)}&_=${new Date().getTime()}`);
-                const d = await r.json();
-                if (d.OCUPADO) {
-                    alert(`BLOQUEIO: ${tag} já está com ${d.MOTORISTA}. Finalize o trajeto anterior!`);
-                    idC.value = "TAG EM USO";
-                    idC.style.color = "red";
-                    btn.disabled = true;
-                } else {
-                    idC.value = d.SUGESTAOID || "Condutor 1";
-                    idC.style.color = "blue";
-                    btn.disabled = false;
-                    btn.classList.replace('bg-slate-300', 'bg-green-600');
-                }
-            } catch (e) { idC.value = "ERRO CONEXÃO"; }
-        }
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcDhXRYVo_Nn3VkFzHg9cq_rqUJZ1Ll9PcQzoIeOgt5VHxaQot1noJbyg5nKJSg6yW/exec"; 
+    let equipe = [];
 
-        function calc() {
-            const limpar = (id) => parseInt(document.getElementById(id).value.replace(/\D/g, '')) || 0;
-            const km = document.getElementById('km_final').value ? limpar('km_final') : limpar('km_inicial');
-            const tr = limpar('km_troca');
-            if (km > 0 && tr > 0) {
-                const r = tr - km; const t = r <= 0 ? "VENCIDO!" : "RESTAM: " + r + " KM";
-                document.getElementById('res_resta').innerText = t; document.getElementById('res_resta_fim').innerText = t;
+    function buscarNomes() {
+        const id = 'cb_' + Date.now();
+        window[id] = (data) => {
+            equipe = data.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+            renderizarLista();
+            renderizarAdmin();
+            delete window[id];
+            if(document.getElementById(id)) document.getElementById(id).remove();
+        };
+        const s = document.createElement('script');
+        s.id = id; s.src = `${SCRIPT_URL}?callback=${id}`;
+        document.body.appendChild(s);
+    }
+
+    function renderizarLista() {
+        document.getElementById('loader').classList.add('hidden');
+        const listaDiv = document.getElementById('corpo-lista');
+        listaDiv.innerHTML = "";
+        equipe.forEach((nome, i) => {
+            listaDiv.innerHTML += `
+                <div class="item-lista">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="check-${i}" checked onchange="monitorar()">
+                        <span class="nome-func">${nome}</span>
+                    </div>
+                    <select id="motivo-${i}" class="hidden" onchange="monitorar()">
+                        <option value="Falta sem justificativa">Falta s/ Justif.</option>
+                        <option value="Atestado">Atestado</option>
+                        <option value="Férias">Férias</option>
+                        <option value="Em viagem">Em viagem</option>
+                        <option value="Falta justificada">Falta Justif.</option>
+                        <option value="Ausente">Ausente</option>
+                    </select>
+                </div>`;
+        });
+        monitorar();
+    }
+
+    function renderizarAdmin() {
+        const adminDiv = document.getElementById('lista-admin');
+        adminDiv.innerHTML = "";
+        equipe.forEach(nome => {
+            adminDiv.innerHTML += `
+                <div class="item-lista">
+                    <span style="font-size: 14px;">${nome}</span>
+                    <button class="btn-del" onclick="removerFuncionario('${nome}')">EXCLUIR</button>
+                </div>`;
+        });
+    }
+
+    async function salvarFuncionario() {
+        const input = document.getElementById('novo-nome');
+        const nome = input.value.trim();
+        if(!nome) return;
+        input.disabled = true;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'add', nome: nome}) });
+        input.value = ""; input.disabled = false;
+        buscarNomes();
+    }
+
+    async function removerFuncionario(nome) {
+        if(!confirm("Remover " + nome + "?")) return;
+        await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({acao: 'del', nome: nome}) });
+        buscarNomes();
+    }
+
+    function monitorar() {
+        let f=0, a=0, j=0, s=0;
+        equipe.forEach((_, i) => {
+            const cb = document.getElementById(`check-${i}`);
+            const sel = document.getElementById(`motivo-${i}`);
+            if (cb && !cb.checked) {
+                sel.classList.remove('hidden');
+                const v = sel.value;
+                if (v === "Férias") f++; else if (v === "Atestado") a++; else if (v === "Falta justificada") j++; else if (v !== "Ausente" && v !== "Em viagem") s++;
+            } else if (cb) sel.classList.add('hidden');
+        });
+        document.getElementById('count-ferias').innerText = f;
+        document.getElementById('count-atestado').innerText = a;
+        document.getElementById('count-faltajust').innerText = j;
+        document.getElementById('count-faltas').innerText = s;
+    }
+
+    function abrirAdmin() { document.getElementById('modal-admin').classList.remove('hidden'); }
+    function fecharAdmin() { document.getElementById('modal-admin').classList.add('hidden'); }
+
+    function enviarWhatsapp() {
+        const dataH = new Date().toLocaleDateString('pt-BR');
+        let cat = { planta: [], ferias: [], atestado: [], viagem: [], just: [], falta: [], ausente: [] };
+        equipe.forEach((nome, i) => {
+            const cb = document.getElementById(`check-${i}`);
+            if (cb && cb.checked) cat.planta.push(`_${nome}_`);
+            else if (cb) {
+                const mot = document.getElementById(`motivo-${i}`).value;
+                if (mot === "Férias") cat.ferias.push(`_${nome}_`);
+                else if (mot === "Atestado") cat.atestado.push(`_${nome}_`);
+                else if (mot === "Em viagem") cat.viagem.push(`_${nome}_`);
+                else if (mot === "Falta justificada") cat.just.push(`_${nome}_`);
+                else if (mot === "Ausente") cat.ausente.push(`_${nome}_`);
+                else cat.falta.push(`_${nome}_`);
             }
-        }
+        });
+        const msg = `*FREQUÊNCIA TELEJUR* - ${dataH}\n\n✅ *Efetivo na planta: ${cat.planta.length}*\n${cat.planta.join('\n')}\n\n✔️ *Férias:* ${cat.ferias.join(', ') || '0'}\n✔️ *Atestado:* ${cat.atestado.join(', ') || '0'}\n✔️ *Ausente:* ${cat.ausente.join(', ') || '0'}\n✔️ *Falta justificada:* ${cat.just.join(', ') || '0'}\n✔️ *Faltas:* ${cat.falta.join(', ') || '0'}`;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(msg));
+    }
 
-        async function enviar(tipo) {
-            const btn = event.target;
-            if(!confirm("Confirmar envio?")) return;
-            btn.disabled = true; btn.innerText = "GRAVANDO...";
-            const agora = new Date();
-            const dados = {
-                tipo: tipo, data: agora.toLocaleDateString('pt-BR'), tag: document.getElementById('tag_select').value.trim(), 
-                id_motorista: document.getElementById('id_condutor').value, nome: document.getElementById('nome_condutor').value.toUpperCase(), 
-                km_inicial: document.getElementById('km_inicial').value.replace(/\D/g, ''), km_final: document.getElementById('km_final').value.replace(/\D/g, ''), 
-                hora_inicio: tipo === 'inicio' ? agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "", 
-                hora_fim: tipo === 'fim' ? agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : "", 
-                veiculo: document.getElementById('veiculo_input').value, placa: document.getElementById('placa_input').value, 
-                tipo_oleo: document.getElementById('tipo_oleo').value, prox_oleo: document.getElementById('km_troca').value.replace(/\D/g, ''), 
-                resta_troca: document.getElementById('res_resta').innerText, obs: document.getElementById('obs').value.toUpperCase() || "S/O"
-            };
-            try {
-                await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados)});
-                const zap = `🚀 *TRAJETO: ${tipo === 'inicio' ? 'SAÍDA' : 'CHEGADA'}*\n👤 *MOTORISTA:* ${dados.nome}\n🆔 *${dados.id_motorista}*\n🏷️ *TAG:* ${dados.tag}\n📍 *KM:* ${tipo === 'inicio' ? dados.km_inicial : dados.km_final}\n⚠️ *RESTO ÓLEO:* ${dados.resta_troca}`;
-                window.open(`https://wa.me/5593981162453?text=${encodeURIComponent(zap)}`);
-                if(tipo === 'fim') location.reload(); else mudarTela('retorno');
-            } catch(e) { alert("Erro!"); btn.disabled = false; }
-        }
-    </script>
+    window.onload = buscarNomes;
+</script>
 </body>
 </html>
